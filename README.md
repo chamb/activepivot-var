@@ -1,7 +1,7 @@
-# sandbox-light
-ActivePivot application with a simple portfolio management data model (trades, products, risks and aggregations).
+# activepivot-var
+ActivePivot application with a simple Value at Risk (VaR) model (trades, products, pnl vectors).
 
-The project comes with a data generator that you must run at least once before starting the application.
-The data generator executable is `com.activeviam.sandbox.generator.DataGenerator` and can be configured in the `src/main/resources/sandbox.properties` file
+By default the data is generated on the fly and loaded directly into ActivePivot. This allows to run large benchmarks without requiring a fast storage to load data files from. The data generation parameters can be modified by editing `src/main/resources/data.properties`.
 
-Once the three data csv files are generated in the `data` directory, the application can be started. ActivePivot will parse the CSV files and load them into an in-memory cube, ready for analysis.
+The project also comes with a data generator that you can run to generate CSV files.
+The data generator executable is `com.activeviam.var.generator.VaRDataGenerator` and can be configured with the `src/main/resources/data.properties` file.
