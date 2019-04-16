@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -115,12 +116,16 @@ public class DataLoadingConfig {
     	IMessage<String, Object> tradeMessage = tradeChannel.newMessage("Trades");
     	IMessage<String, Object> riskMessage = riskChannel.newMessage("Risks");
 		
-		for (int start = 0; start < tradeCount; start+=batchSize) {
-
+    	
+    	
+    	// Chunk the range of trades to generate into batches
+    	// and perform the generation of the batches in parallel.
+    	IntStream.range(0, tradeCount/batchSize).parallel().forEach(batch -> {
+    		
 	    	IMessageChunk<Object> tradeChunk = tradeMessage.newChunk();
 	    	IMessageChunk<Object> riskChunk = riskMessage.newChunk();
-			
-			for(int tradeId = start; tradeId < Math.min(tradeCount, start + batchSize); tradeId++) {
+    		
+			for(int tradeId = batch*batchSize; tradeId < Math.min(tradeCount, (batch + 1) * batchSize); tradeId++) {
 
 				int productId = (int) (tradeId % productCount);
 				int counterPartyId = (int) (tradeId % counterPartyCount);
@@ -132,12 +137,12 @@ public class DataLoadingConfig {
 			
 				tradeChunk.append(trade);
 				riskChunk.append(risk);
-				
 			}
-
+			
 	    	tradeMessage.append(tradeChunk);
 	    	riskMessage.append(riskChunk);
-		}
+	    	
+    	});
 		
     	tradeChannel.send(tradeMessage);
     	riskChannel.send(riskMessage);
