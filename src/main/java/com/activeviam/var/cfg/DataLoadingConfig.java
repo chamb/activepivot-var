@@ -1,5 +1,5 @@
 /*
- * (C) ActiveViam 2018
+ * (C) ActiveViam 2019
  * ALL RIGHTS RESERVED. This material is the CONFIDENTIAL and PROPRIETARY
  * property of Quartet Financial Systems Limited. Any unauthorized use,
  * reproduction or transfer of this material is strictly prohibited
@@ -79,6 +79,7 @@ public class DataLoadingConfig {
     	Integer productCount = env.getProperty("tradeSource.productCount", Integer.class, 100);
     	Integer tradeCount = env.getProperty("tradeSource.tradeCount", Integer.class, 1000);
     	Integer vectorLength = env.getProperty("tradeSource.vectorLength", Integer.class, 260);
+    	Integer batchSize = env.getProperty("tradeSource.batchSize", Integer.class, 1000);
     	
     	POJOMessageChannelFactory channelFactory = new POJOMessageChannelFactory(datastore);
     	IStoreMessageChannel<String, Object> productChannel = channelFactory.createChannel("Products");
@@ -103,34 +104,41 @@ public class DataLoadingConfig {
     	}
     	productMessage.append(productChunk);
     	productChannel.send(productMessage);
-    	
-    	IMessage<String, Object> tradeMessage = tradeChannel.newMessage("Trades");
-    	IMessage<String, Object> riskMessage = riskChannel.newMessage("Risks");
-    	IMessageChunk<Object> tradeChunk = tradeMessage.newChunk();
-    	IMessageChunk<Object> riskChunk = riskMessage.newChunk();
-    	
+
     	// Generate and load trades and risks
 		// Generate the trades and the risk entries, write them into a CSV file
 		TradeGenerator tradeGenerator = new TradeGenerator();
 		RiskCalculator riskCalculator = new RiskCalculator(vectorLength);
 		final int counterPartyCount = counterpartyRepository.getCounterPartyCount();
 
+
+    	IMessage<String, Object> tradeMessage = tradeChannel.newMessage("Trades");
+    	IMessage<String, Object> riskMessage = riskChannel.newMessage("Risks");
+		
+		for (int start = 0; start < tradeCount; start+=batchSize) {
+
+	    	IMessageChunk<Object> tradeChunk = tradeMessage.newChunk();
+	    	IMessageChunk<Object> riskChunk = riskMessage.newChunk();
 			
-		for (int tradeId = 0; tradeId < tradeCount; tradeId++) {
-			int productId = (int) (tradeId % productCount);
-			int counterPartyId = (int) (tradeId % counterPartyCount);
-			Trade trade = tradeGenerator.generate(tradeId,
+			for(int tradeId = start; tradeId < Math.min(tradeCount, start + batchSize); tradeId++) {
+
+				int productId = (int) (tradeId % productCount);
+				int counterPartyId = (int) (tradeId % counterPartyCount);
+				Trade trade = tradeGenerator.generate(tradeId,
 				productRepository.getProduct(productId),
 				counterpartyRepository.getCounterParty(counterPartyId));
 				
-			Risk risk = riskCalculator.execute(trade, productRepository.getProduct(productId));
+				Risk risk = riskCalculator.execute(trade, productRepository.getProduct(productId));
 			
-			tradeChunk.append(trade);
-			riskChunk.append(risk);
-		}
+				tradeChunk.append(trade);
+				riskChunk.append(risk);
+				
+			}
 
-    	tradeMessage.append(tradeChunk);
-    	riskMessage.append(riskChunk);
+	    	tradeMessage.append(tradeChunk);
+	    	riskMessage.append(riskChunk);
+		}
+		
     	tradeChannel.send(tradeMessage);
     	riskChannel.send(riskMessage);
     	

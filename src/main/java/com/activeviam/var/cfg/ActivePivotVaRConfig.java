@@ -1,5 +1,5 @@
 /*
- * (C) ActiveViam 2018
+ * (C) ActiveViam 2019
  * ALL RIGHTS RESERVED. This material is the CONFIDENTIAL and PROPRIETARY
  * property of Quartet Financial Systems Limited. Any unauthorized use,
  * reproduction or transfer of this material is strictly prohibited
@@ -15,7 +15,7 @@ import org.springframework.context.annotation.PropertySource;
 
 import com.activeviam.copper.Registrations;
 import com.activeviam.var.cfg.datastore.DatastoreDescriptionConfig;
-import com.activeviam.var.cfg.pivot.SandboxManagerConfig;
+import com.activeviam.var.cfg.pivot.ActivePivotManagerConfig;
 import com.activeviam.var.cfg.security.CorsFilterConfig;
 import com.activeviam.var.cfg.security.SecurityConfig;
 import com.qfs.server.cfg.IDatastoreConfig;
@@ -49,7 +49,7 @@ import com.quartetfs.fwk.monitoring.jmx.impl.JMXEnabler;
 		DatastoreDescriptionConfig.class,
 		FullAccessBranchPermissionsManagerConfig.class,
 		DataLoadingConfig.class,
-		SandboxManagerConfig.class,
+		ActivePivotManagerConfig.class,
 		LocalContentServiceConfig.class,
 		LocalI18nConfig.class,
 		SecurityConfig.class,

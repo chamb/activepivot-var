@@ -1,5 +1,5 @@
 /*
- * (C) ActiveViam 2018
+ * (C) ActiveViam 2019
  * ALL RIGHTS RESERVED. This material is the CONFIDENTIAL and PROPRIETARY
  * property of Quartet Financial Systems Limited. Any unauthorized use,
  * reproduction or transfer of this material is strictly prohibited
@@ -36,7 +36,7 @@ import com.quartetfs.biz.pivot.definitions.ISelectionDescription;
  *
  */
 @Configuration
-public class SandboxManagerConfig implements IActivePivotManagerDescriptionConfig {
+public class ActivePivotManagerConfig implements IActivePivotManagerDescriptionConfig {
 	
 	/* ********** */
 	/* Formatters */
@@ -95,12 +95,12 @@ public class SandboxManagerConfig implements IActivePivotManagerDescriptionConfi
 		return builder
 				
 				// Define hierarchies of the cube
-				.withDimensions(SandboxManagerConfig::dimensions)
+				.withDimensions(ActivePivotManagerConfig::dimensions)
 				
 				// Define aggregations and KPIs
 				.withDescriptionPostProcessor(
 						StartBuilding.copperCalculations()
-							.withDefinition(SandboxManagerConfig::coPPerCalculations)
+							.withDefinition(ActivePivotManagerConfig::coPPerCalculations)
 							.build()
 				);
 	}
@@ -149,7 +149,7 @@ public class SandboxManagerConfig implements IActivePivotManagerDescriptionConfi
 	 * @param context The context with which to build the calculations.
 	 */
 	public static void coPPerCalculations(BuildingContext context) {
-		SandboxManagerConfig.someAggregatedMeasures(context).publish();
+		ActivePivotManagerConfig.someAggregatedMeasures(context).publish();
 	}
 
 	
