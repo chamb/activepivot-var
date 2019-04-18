@@ -10,6 +10,7 @@ import static com.activeviam.copper.columns.Columns.col;
 import static com.activeviam.copper.columns.Columns.count;
 import static com.activeviam.copper.columns.Columns.sum;
 
+import com.quartetfs.biz.pivot.context.impl.QueriesTimeLimit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,8 @@ import com.quartetfs.biz.pivot.cube.hierarchy.ILevelInfo.LevelType;
 import com.quartetfs.biz.pivot.definitions.IActivePivotInstanceDescription;
 import com.quartetfs.biz.pivot.definitions.IActivePivotManagerDescription;
 import com.quartetfs.biz.pivot.definitions.ISelectionDescription;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * 
@@ -102,7 +105,8 @@ public class ActivePivotManagerConfig implements IActivePivotManagerDescriptionC
 						StartBuilding.copperCalculations()
 							.withDefinition(ActivePivotManagerConfig::coPPerCalculations)
 							.build()
-				);
+				)
+				.withSharedContextValue(QueriesTimeLimit.withoutLimit());
 	}
 
 
