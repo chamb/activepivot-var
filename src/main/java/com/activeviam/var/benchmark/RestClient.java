@@ -54,6 +54,11 @@ public class RestClient {
 	protected final String baseUrl;
 
 	/**
+	 * HTTP Connection timeout for MDX query
+	 */
+	public static final int CONNECTION_TIMEOUT = 40*60*1000;
+
+	/**
 	 * Full constructor.
 	 * @param port server port
 	 */
@@ -78,7 +83,7 @@ public class RestClient {
 		}
 
 		return restService.path(QfsWebUtils.url(baseUrl, REST_API_URL_PREFIX, CUBE_QUERIES_SUFFIX, MDX_PATH))
-				.post(Entity.entity(json, MediaType.APPLICATION_JSON_TYPE))
+				.post(Entity.entity(json, MediaType.APPLICATION_JSON_TYPE), CONNECTION_TIMEOUT)
 				.as(JsonCellSetData.class);
 	}
 
