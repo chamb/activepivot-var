@@ -262,8 +262,8 @@ public class MDXBenchmark {
 
 		System.out.println(System.getProperty("java.library.path"));
 
-		int iterations = 10;
-		int clientCount = 2;
+		int iterations = Integer.parseInt(System.getProperty("iterations", "10"));
+		int clientCount = Integer.parseInt(System.getProperty("clients", "1"));
 
 		Map<String, String> queries = new HashMap<>();
 		queries.put("Count",
