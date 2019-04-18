@@ -9,9 +9,12 @@ package com.activeviam.var.cfg;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
+import com.qfs.platform.IPlatform;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.DependsOn;
@@ -120,6 +123,13 @@ public class DataLoadingConfig {
     	
     	// Chunk the range of trades to generate into batches
     	// and perform the generation of the batches in parallel.
+		final int parallelism = env.getProperty("tradeSource.parallelism", Integer.class, IPlatform.CURRENT_PLATFORM.getProcessorCount()/2);
+
+		ForkJoinPool forkJoinPool = null;
+
+		try {
+			forkJoinPool = new ForkJoinPool(parallelism);
+			forkJoinPool.submit(() ->
     	IntStream.range(0, tradeCount/batchSize).parallel().forEach(batch -> {
     		
 	    	IMessageChunk<Object> tradeChunk = tradeMessage.newChunk();
@@ -142,7 +152,13 @@ public class DataLoadingConfig {
 	    	tradeMessage.append(tradeChunk);
 	    	riskMessage.append(riskChunk);
 	    	
-    	});
+    	})).get();
+
+		} finally {
+			if (forkJoinPool != null) {
+				forkJoinPool.shutdown(); //always remember to shutdown the pool
+			}
+		}
 		
     	tradeChannel.send(tradeMessage);
     	riskChannel.send(riskMessage);
