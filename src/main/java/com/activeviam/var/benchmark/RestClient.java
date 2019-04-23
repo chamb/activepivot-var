@@ -56,7 +56,7 @@ public class RestClient {
 	/**
 	 * HTTP Connection timeout for MDX query
 	 */
-	public static final int CONNECTION_TIMEOUT = 40*60*1000;
+	public static final int CONNECTION_TIMEOUT = 30*60*1000;
 
 	/**
 	 * Full constructor.

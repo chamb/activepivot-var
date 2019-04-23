@@ -106,7 +106,7 @@ public class ActivePivotManagerConfig implements IActivePivotManagerDescriptionC
 							.withDefinition(ActivePivotManagerConfig::coPPerCalculations)
 							.build()
 				)
-				.withSharedContextValue(QueriesTimeLimit.withoutLimit());
+				.withSharedContextValue(QueriesTimeLimit.of(25, TimeUnit.MINUTES));
 	}
 
 
