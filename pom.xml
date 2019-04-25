@@ -13,7 +13,7 @@
 	</prerequisites>
 
 	<properties>
-		<activepivot.version>5.7.8</activepivot.version>
+		<activepivot.version>5.8.0-jdk8</activepivot.version>
 		<activeui.version>4.2.10</activeui.version>
 		<javax.servlet.version>4.0.1</javax.servlet.version>
 		<jetty.version>9.4.16.v20190411</jetty.version>
