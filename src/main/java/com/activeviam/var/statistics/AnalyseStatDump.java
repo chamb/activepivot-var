@@ -32,6 +32,7 @@ public class AnalyseStatDump {
 			final File[] dumpFiles = dumpFolder.listFiles();
 			for (File dumpFile : dumpFiles) {
 				if (dumpFile.getName().startsWith("store_")) {
+					System.out.println("Reading store file "+dumpFile+" ...");
 					final IMemoryStatistic memoryStatistic = MemoryStatisticSerializerUtil.readStatisticFile(dumpFile);
 					StoreStatisticRetriever storeRetriever = new StoreStatisticRetriever();
 					memoryStatistic.accept(storeRetriever);
@@ -43,6 +44,7 @@ public class AnalyseStatDump {
 					}
 				}else{
 					if (dumpFile.getName().startsWith("pivot_")) {
+						System.out.println("Reading pivot file "+dumpFile+" ...");
 						final IMemoryStatistic memoryStatistic = MemoryStatisticSerializerUtil.readStatisticFile(dumpFile);
 						System.out.println("Total off-heap size for pivot: " +
 								memoryStatistic.getRetainedOffHeap());
