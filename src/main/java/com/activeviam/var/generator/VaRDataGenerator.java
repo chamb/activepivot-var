@@ -6,6 +6,9 @@
  */
 package com.activeviam.var.generator;
 
+import com.qfs.platform.IPlatform;
+import com.quartetfs.fwk.QuartetRuntimeException;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -13,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.concurrent.ForkJoinPool;
+import java.util.stream.IntStream;
 
 /**
  * 
@@ -46,8 +51,7 @@ public class VaRDataGenerator {
 		CounterPartyRepository counterparties = new CounterPartyRepository();
 		
 		Path productFile = Paths.get(BASEDIR, "data", "products.csv");
-		Path tradeFile = Paths.get(BASEDIR, "data", "trades.csv");
-		Path riskFile = Paths.get(BASEDIR, "data", "risks.csv");
+
 		
 		// Create the data base directory if it does not exist
 		Path dataDir = Paths.get(BASEDIR, "data");
@@ -70,38 +74,72 @@ public class VaRDataGenerator {
 		// Generate the trades and the risk entries, write them into a CSV file
 		TradeGenerator tradeGenerator = new TradeGenerator();
 		RiskCalculator riskCalculator = new RiskCalculator(vectorLength);
-		final int counterPartyCount = counterparties.getCounterPartyCount();
 
-		try(
-			Writer tradeWriter = Files.newBufferedWriter(tradeFile);
-			Writer riskWriter = Files.newBufferedWriter(riskFile);
+		final int parallelism = Integer.parseInt((String)prop.getOrDefault("tradeSource.parallelism", Integer.valueOf(IPlatform.CURRENT_PLATFORM.getProcessorCount()).toString()));
+
+		ForkJoinPool forkJoinPool = null;
+
+		try {
+			forkJoinPool = new ForkJoinPool(parallelism);
+			forkJoinPool.submit(() ->
+					IntStream.range(0, parallelism).parallel().forEach(batch -> {
+						generateTradeAndRiskFiles(tradeCount, productCount, products, counterparties, tradeGenerator, riskCalculator, batch, tradeCount/parallelism);
+					})).get();
+		}catch (Exception e){
+			e.printStackTrace();
+		} finally{
+			if (forkJoinPool!=null) {
+				forkJoinPool.shutdown();
+			}
+			forkJoinPool = null;
+		}
+
+	}
+
+	private static void generateTradeAndRiskFiles(int totalTradeCount,
+												  int totalProductCount,
+												  ProductRepository products,
+												  CounterPartyRepository counterparties,
+												  TradeGenerator tradeGenerator,
+												  RiskCalculator riskCalculator,
+												  int fileNumber,
+												  int batchSize) {
+		Path tradeFile = Paths.get(BASEDIR, "data", "trades-" + fileNumber + ".csv");
+		Path riskFile = Paths.get(BASEDIR, "data", "risks-"+fileNumber+".csv");
+		try (
+				Writer tradeWriter = Files.newBufferedWriter(tradeFile);
+				Writer riskWriter = Files.newBufferedWriter(riskFile);
 		) {
-			
+
 			PrintWriter tw = new PrintWriter(tradeWriter);
 			PrintWriter rw = new PrintWriter(riskWriter);
 			Trade.appendCsvHeader(tw);
 			Risk.appendCsvHeader(rw);
 			tw.append('\n');
 			rw.append('\n');
-			
-			for (int tradeId = 0; tradeId < tradeCount; tradeId++) {
-				int productId = (int) (tradeId % productCount);
+
+			int counterPartyCount = counterparties.getCounterPartyCount();
+			final int minTradeId = fileNumber * batchSize;
+			final int maxTradeId = Math.min(totalTradeCount, (fileNumber + 1) * batchSize);
+			for (int tradeId = minTradeId; tradeId < maxTradeId; tradeId++) {
+				int productId = (int) (tradeId % totalProductCount);
 				int counterPartyId = (int) (tradeId % counterPartyCount);
 				Trade trade = tradeGenerator.generate(tradeId,
-					products.getProduct(productId),
-					counterparties.getCounterParty(counterPartyId));
+						products.getProduct(productId),
+						counterparties.getCounterParty(counterPartyId));
 				trade.appendCsvRow(tw);
 				tw.append('\n');
-				
+
 				Risk risk = riskCalculator.execute(trade, products.getProduct(productId));
 				risk.appendCsvRow(rw);
 				rw.append('\n');
 			}
-			
-			System.out.println(tradeCount + " trades written into " + tradeFile.toRealPath());
-			System.out.println(tradeCount + " risk entries written into " + riskFile.toRealPath());
-		}
 
+			System.out.println(maxTradeId-minTradeId + " trades written into " + tradeFile.toRealPath());
+			System.out.println(maxTradeId-minTradeId + " risk entries written into " + riskFile.toRealPath());
+		}catch (Exception e){
+			throw new QuartetRuntimeException("Unable to generate risk and trade files n° "+fileNumber, e);
+		}
 	}
 
 }
