@@ -185,6 +185,7 @@ public class DataLoadingConfig {
     	CSVSource<Path> source = new CSVSource<>();
 		final Properties sourceProps = new Properties();
 		final String parserThreads = env.getProperty("csvSource.parserThreads", "4");
+		final String inputDir = env.getProperty("csvSource.dataSet", ".\\data");
 		sourceProps.setProperty(ICSVSourceConfiguration.PARSER_THREAD_PROPERTY, parserThreads);
 		source.configure(sourceProps);
 
@@ -230,11 +231,11 @@ public class DataLoadingConfig {
     	
     	FileSystemCSVTopicFactory topicFactory = new FileSystemCSVTopicFactory(false);
     	source.addTopic(topicFactory.createDirectoryTopic(
-    			"Trades", ".\\data", "glob:*trades*.csv", tradeConfig));
+    			"Trades", inputDir, "glob:*trades*.csv", tradeConfig));
     	source.addTopic(topicFactory.createDirectoryTopic(
-    			"Products", ".\\data", "glob:*products*.csv", productConfig));
+    			"Products", inputDir, "glob:*products*.csv", productConfig));
     	source.addTopic(topicFactory.createDirectoryTopic(
-    			"Risks", ".\\data", "glob:*risks*.csv", riskConfig));
+    			"Risks", inputDir, "glob:*risks*.csv", riskConfig));
 
     	CSVMessageChannelFactory<Path> factory = new CSVMessageChannelFactory<Path>(source, datastore);
     	

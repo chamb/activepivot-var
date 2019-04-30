@@ -9,6 +9,7 @@ package com.activeviam.var.generator;
 import com.qfs.platform.IPlatform;
 import com.quartetfs.fwk.QuartetRuntimeException;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -36,29 +37,38 @@ public class VaRDataGenerator {
 	public static final char CSV_VECTOR_SEPARATOR = ';';
 	
 	/** Base directory to output files, working dir by default */
-	static final String BASEDIR = ".";
+	static final String DEFAULT_OUTPUT_DIR = "./data";
 	
 	public static void main(String[] args) throws IOException {
-		
+
 		Properties prop = new Properties();
-		prop.load(VaRDataGenerator.class.getClassLoader().getResourceAsStream("data.properties"));
-		
-		int tradeCount = Integer.parseInt((String) prop.getOrDefault("tradeSource.tradeCount", "1000"));
-		int productCount = Integer.parseInt((String) prop.getOrDefault("tradeSource.productCount", "100"));
-		int vectorLength = Integer.parseInt((String) prop.getOrDefault("tradeSource.vectorLength", "260"));
-		
+		if (args.length==1){
+			// use the properties given as argument
+			prop.load(new FileInputStream(args[0]));
+		}else {
+			// use the default data.properties
+			prop.load(VaRDataGenerator.class.getClassLoader().getResourceAsStream("data.properties"));
+		}
+
+		final int tradeCount = Integer.parseInt((String) prop.getOrDefault("tradeSource.tradeCount", "1000"));
+		final int productCount = Integer.parseInt((String) prop.getOrDefault("tradeSource.productCount", "100"));
+		final int vectorLength = Integer.parseInt((String) prop.getOrDefault("tradeSource.vectorLength", "260"));
+		final String outputDir = (String) prop.getOrDefault("tradeSource.outputDir", DEFAULT_OUTPUT_DIR);
+		final int parallelism = Integer.parseInt((String)prop.getOrDefault("tradeSource.parallelism", Integer.valueOf(IPlatform.CURRENT_PLATFORM.getProcessorCount()).toString()));
+		final int numberRiskFiles = Integer.parseInt((String)prop.getOrDefault("tradeSource.numberRiskFiles", Integer.valueOf(parallelism).toString()));
+
 		ProductRepository products = new ProductRepository(productCount);
 		CounterPartyRepository counterparties = new CounterPartyRepository();
-		
-		Path productFile = Paths.get(BASEDIR, "data", "products.csv");
 
-		
+		Path productFile = Paths.get(outputDir, "products.csv");
+
+
 		// Create the data base directory if it does not exist
-		Path dataDir = Paths.get(BASEDIR, "data");
+		Path dataDir = Paths.get(outputDir);
 		if(!Files.isDirectory(dataDir)) {
 			Files.createDirectory(dataDir);
 		}
-		
+
 		// Write the product file
 		try(Writer w = Files.newBufferedWriter(productFile)) {
 			PrintWriter pw = new PrintWriter(w);
@@ -67,23 +77,22 @@ public class VaRDataGenerator {
 				pw.append('\n');
 				products.getProduct(p).appendCsvRow(pw);
 			}
-			
+
 			System.out.println(productCount + " products written into " + productFile.toRealPath());
 		}
 
-		// Generate the trades and the risk entries, write them into a CSV file
+		// Generate the trades and the risk entries, write them into numberRiskFiles CSV files
 		TradeGenerator tradeGenerator = new TradeGenerator();
 		RiskCalculator riskCalculator = new RiskCalculator(vectorLength);
 
-		final int parallelism = Integer.parseInt((String)prop.getOrDefault("tradeSource.parallelism", Integer.valueOf(IPlatform.CURRENT_PLATFORM.getProcessorCount()).toString()));
 
 		ForkJoinPool forkJoinPool = null;
 
 		try {
 			forkJoinPool = new ForkJoinPool(parallelism);
 			forkJoinPool.submit(() ->
-					IntStream.range(0, parallelism).parallel().forEach(batch -> {
-						generateTradeAndRiskFiles(tradeCount, productCount, products, counterparties, tradeGenerator, riskCalculator, batch, tradeCount/parallelism);
+					IntStream.range(0, numberRiskFiles).parallel().forEach(batch -> {
+						generateTradeAndRiskFiles(outputDir, tradeCount, productCount, products, counterparties, tradeGenerator, riskCalculator, batch, tradeCount/numberRiskFiles);
 					})).get();
 		}catch (Exception e){
 			e.printStackTrace();
@@ -96,7 +105,8 @@ public class VaRDataGenerator {
 
 	}
 
-	private static void generateTradeAndRiskFiles(int totalTradeCount,
+	private static void generateTradeAndRiskFiles(String outputDir,
+												  int totalTradeCount,
 												  int totalProductCount,
 												  ProductRepository products,
 												  CounterPartyRepository counterparties,
@@ -104,11 +114,11 @@ public class VaRDataGenerator {
 												  RiskCalculator riskCalculator,
 												  int fileNumber,
 												  int batchSize) {
-		Path tradeFile = Paths.get(BASEDIR, "data", "trades-" + fileNumber + ".csv");
-		Path riskFile = Paths.get(BASEDIR, "data", "risks-"+fileNumber+".csv");
+		Path tradeFile = Paths.get(outputDir, String.format("trades-%03d.csv", fileNumber));
+		Path riskFile = Paths.get(outputDir, String.format("risks-%03d.csv", fileNumber));
 		try (
 				Writer tradeWriter = Files.newBufferedWriter(tradeFile);
-				Writer riskWriter = Files.newBufferedWriter(riskFile);
+				Writer riskWriter = Files.newBufferedWriter(riskFile)
 		) {
 
 			PrintWriter tw = new PrintWriter(tradeWriter);
