@@ -15,6 +15,7 @@ import static com.qfs.literal.ILiteralType.STRING;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import com.qfs.desc.IStoreDescriptionBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -70,8 +71,8 @@ public class DatastoreDescriptionConfig implements IDatastoreDescriptionConfig {
 	
 	@Bean
 	public IStoreDescription trades() {
-		
-		return new StoreDescriptionBuilder().withStoreName("Trades")
+
+		final IStoreDescriptionBuilder.IKeyedTaggable keyedTaggable = new StoreDescriptionBuilder().withStoreName("Trades")
 				.withField("Id", LONG).asKeyField()
 				.withField("ProductId", INT)
 				.withField("ProductQtyMultiplier", DOUBLE)
@@ -81,21 +82,31 @@ public class DatastoreDescriptionConfig implements IDatastoreDescriptionConfig {
 				.withField("Counterparty", STRING)
 				.withField("Date", LOCAL_DATE)
 				.withField("Status", STRING)
-				.withField("IsSimulated", STRING)
-				.withModuloPartitioning("Id", getPartitionCount())
+				.withField("IsSimulated", STRING);
+		final int partitionCount = getPartitionCount();
+		if (partitionCount ==1){
+			return keyedTaggable.build();
+		}
+		return keyedTaggable
+				.withModuloPartitioning("Id", partitionCount)
 				.build();
 	}
 	
 	/** @return the description of the risk store */
 	public IStoreDescription risks() {
-		return new StoreDescriptionBuilder().withStoreName("Risks")
+		final IStoreDescriptionBuilder.IKeyedTaggable keyedTaggable = new StoreDescriptionBuilder().withStoreName("Risks")
 				.withField("TradeId", LONG).asKeyField()
 				.withField("Pnl", DOUBLE)
 				.withField("Delta", DOUBLE)
 				.withField("Gamma", DOUBLE)
 				.withField("Vega", DOUBLE)
-				.withNullableField("PnlVector", "double[]")
-				.withModuloPartitioning("TradeId", getPartitionCount())
+				.withNullableField("PnlVector", "double[]");
+		final int partitionCount = getPartitionCount();
+		if (partitionCount ==1){
+			return keyedTaggable.build();
+		}
+		return keyedTaggable
+				.withModuloPartitioning("TradeId", partitionCount)
 				.build();
 	}
 	
