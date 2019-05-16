@@ -65,6 +65,10 @@ public class DataLoadingConfig {
     @Bean
     @DependsOn(value = "startManager")
     public Void loadData() throws Exception {
+    	if("replay".equalsIgnoreCase(env.getProperty("transactionLog.mode"))){
+    		// we are replaying the transaction log, we should not load data from elsewhere
+			return null;
+		}
     	if("false".equalsIgnoreCase(env.getProperty("csvSource.enabled", "false"))) {
     		generateAndLoadData();
     	} else {

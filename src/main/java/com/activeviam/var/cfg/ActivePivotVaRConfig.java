@@ -6,6 +6,7 @@
  */
 package com.activeviam.var.cfg;
 
+import com.activeviam.var.cfg.datastore.DatastoreWithLogConfig;
 import com.qfs.monitoring.statistic.memory.IMemoryStatistic;
 import com.qfs.pivot.monitoring.impl.MemoryAnalysisService;
 import com.qfs.store.IDatastore;
@@ -53,7 +54,7 @@ import java.util.logging.Logger;
 @Configuration
 @Import(value = {
 		ActivePivotConfig.class,
-		DatastoreConfig.class,
+		DatastoreWithLogConfig.class,
 		NoSecurityDatastoreServiceConfig.class,
 		DatastoreDescriptionConfig.class,
 		FullAccessBranchPermissionsManagerConfig.class,
