@@ -35,6 +35,7 @@ import com.qfs.service.store.impl.NoSecurityDatastoreServiceConfig;
 import com.quartetfs.fwk.Registry;
 import com.quartetfs.fwk.contributions.impl.ClasspathContributionProvider;
 import com.quartetfs.fwk.monitoring.jmx.impl.JMXEnabler;
+import org.springframework.core.env.Environment;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -91,6 +92,11 @@ public class ActivePivotVaRConfig {
 	@Autowired
 	protected ActivePivotServicesConfig apServiceConfig;
 
+	/** Spring environment */
+	@Autowired
+	protected Environment env;
+
+
 	/** Enable JMX monitoring */
 
 	/**
@@ -139,6 +145,11 @@ public class ActivePivotVaRConfig {
 	@Bean
 	@DependsOn(value = "startManager")
 	public Void dumpStatistics() throws Exception {
+		// only dump stats if we want them dumped
+		final String dump = env.getProperty("memoryStat.dump");
+		if (dump == null || !Boolean.parseBoolean(dump)){
+			return null;
+		}
 		final IActivePivotManager manager = apConfig.activePivotManager();
 		MemoryAnalysisService service = new MemoryAnalysisService((IDatastore)manager.getDatastore(), manager, manager.getDatastore().getEpochManager(), Paths.get(System.getProperty("java.io.tmpdir")));
 		final Path dumpFolder = service.exportMostRecentVersion("VaR_application");
