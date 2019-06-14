@@ -1,5 +1,5 @@
 /*
- * (C) ActiveViam 2019
+ * (C) Quartet FS 2017
  * ALL RIGHTS RESERVED. This material is the CONFIDENTIAL and PROPRIETARY
  * property of Quartet Financial Systems Limited. Any unauthorized use,
  * reproduction or transfer of this material is strictly prohibited
@@ -32,6 +32,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.switchuser.SwitchUserFilter;
@@ -44,6 +45,7 @@ import com.qfs.content.service.IContentService;
 import com.qfs.jwt.service.IJwtService;
 import com.qfs.pivot.servlet.impl.ContextValueFilter;
 import com.qfs.security.cfg.ICorsFilterConfig;
+import com.qfs.security.spring.impl.CompositeUserDetailsService;
 import com.qfs.server.cfg.IActivePivotConfig;
 import com.qfs.server.cfg.IJwtConfig;
 import com.qfs.server.cfg.content.IActivePivotContentServiceConfig;
@@ -75,19 +77,16 @@ import com.quartetfs.fwk.security.IUserDetailsService;
 @Configuration
 public abstract class SecurityConfig {
 
-	/** Set to true to allow anonymous access */
-	public static final boolean useAnonymous = false;
-
 	public static final String BASIC_AUTH_BEAN_NAME = "basicAuthenticationEntryPoint";
 
-	/** Cookie name for the AutoPivot application */
-	public static final String COOKIE_NAME = "AP_JSESSIONID";
-	
 	/** Admin user */
 	public static final String ROLE_ADMIN = "ROLE_ADMIN";
 	
 	/** Standard user role */
 	public static final String ROLE_USER = "ROLE_USER";
+
+	/** Role for technical components */
+	public static final String ROLE_TECH = "ROLE_TECH";
 	
 	/** Content Server Root role */
 	public static final String ROLE_CS_ROOT = IContentService.ROLE_ROOT;
@@ -143,7 +142,22 @@ public abstract class SecurityConfig {
 	 */
 	@Bean
 	public UserDetailsService userDetailsService() {
-		return new InMemoryUserDetails(passwordEncoder());
+		InMemoryUserDetailsManagerBuilder b = new InMemoryUserDetailsManagerBuilder()
+				.withUser("admin").password(passwordEncoder().encode("admin")).authorities(ROLE_USER, ROLE_ADMIN, ROLE_CS_ROOT).and()
+				.withUser("user").password(passwordEncoder().encode("user")).authorities(ROLE_USER).and();
+		return new CompositeUserDetailsService(Arrays.asList(b.build(), technicalUserDetailsService()));
+	}
+
+	/**
+	 * Creates a technical user to allow ActivePivot to connect
+	 * to the content server. (noop password encoder)
+	 *
+	 * @return {@link UserDetailsService user data}
+	 */
+	protected UserDetailsManager technicalUserDetailsService() {
+		return new InMemoryUserDetailsManagerBuilder()
+				.withUser("pivot").password(passwordEncoder().encode("pivot")).authorities(ROLE_TECH, ROLE_CS_ROOT).and()
+				.build();
 	}
 	
 	/**
@@ -225,12 +239,6 @@ public abstract class SecurityConfig {
 						.deleteCookies(cookieName)
 						.invalidateHttpSession(true)
 						.logoutSuccessHandler(new NoRedirectLogoutSuccessHandler());
-			}
-
-			if (useAnonymous) {
-				// Handle anonymous users. The granted authority ROLE_USER
-				// will be assigned to the anonymous request
-				http.anonymous().principal("guest").authorities(ROLE_USER);
 			}
 
 			doConfigure(http);
@@ -392,7 +400,7 @@ public abstract class SecurityConfig {
 		 * Constructor
 		 */
 		public ActivePivotSecurityConfigurer() {
-			super(COOKIE_NAME);
+			super("AP_JSESSIONID");
 		}
 
 		@Override
@@ -403,7 +411,7 @@ public abstract class SecurityConfig {
 					.permitAll()
 					// The REST ping service is temporarily authenticated (see PIVOT-3149)
 					.antMatchers(url(REST_API_URL_PREFIX, PING_SUFFIX))
-					.hasAnyAuthority(ROLE_USER)
+					.hasAnyAuthority(ROLE_USER, ROLE_TECH)
 					// REST services
 					.antMatchers(REST_API_URL_PREFIX + "/**")
 					.hasAnyAuthority(ROLE_USER)

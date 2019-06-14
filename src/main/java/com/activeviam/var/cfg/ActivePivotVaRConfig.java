@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import com.activeviam.copper.Registrations;
 import com.activeviam.var.cfg.datastore.DatastoreDescriptionConfig;
@@ -19,7 +20,6 @@ import com.activeviam.var.cfg.pivot.ActivePivotManagerConfig;
 import com.activeviam.var.cfg.security.CorsFilterConfig;
 import com.activeviam.var.cfg.security.SecurityConfig;
 import com.qfs.server.cfg.IDatastoreConfig;
-import com.qfs.server.cfg.i18n.impl.LocalI18nConfig;
 import com.qfs.server.cfg.impl.ActivePivotConfig;
 import com.qfs.server.cfg.impl.ActivePivotServicesConfig;
 import com.qfs.server.cfg.impl.ActiveViamRestServicesConfig;
@@ -40,7 +40,8 @@ import com.quartetfs.fwk.monitoring.jmx.impl.JMXEnabler;
  * @author ActiveViam
  *
  */
-@PropertySource(value = { "classpath:data.properties", "classpath:jwt.properties" })
+@PropertySource(value = { "classpath:jwt.properties" })
+@EnableWebMvc
 @Configuration
 @Import(value = {
 		ActivePivotConfig.class,
@@ -50,8 +51,8 @@ import com.quartetfs.fwk.monitoring.jmx.impl.JMXEnabler;
 		FullAccessBranchPermissionsManagerConfig.class,
 		DataLoadingConfig.class,
 		ActivePivotManagerConfig.class,
-		LocalContentServiceConfig.class,
-		LocalI18nConfig.class,
+		ContentServiceConfig.class,
+		CustomI18nConfig.class,
 		SecurityConfig.class,
 		CorsFilterConfig.class,
 		ActiveUIResourceServerConfig.class,
