@@ -10,10 +10,29 @@ import static com.qfs.QfsWebUtils.url;
 import static com.qfs.server.cfg.impl.ActivePivotRestServicesConfig.PING_SUFFIX;
 import static com.qfs.server.cfg.impl.ActivePivotRestServicesConfig.REST_API_URL_PREFIX;
 
+import com.activeviam.security.cfg.ICorsConfig;
+import com.activeviam.var.cfg.ActiveUIResourceServerConfig;
+import com.qfs.QfsWebUtils;
+import com.qfs.content.cfg.impl.ContentServerRestServicesConfig;
+import com.qfs.content.service.IContentService;
+import com.qfs.jwt.service.IJwtService;
+import com.qfs.pivot.servlet.impl.ContextValueFilter;
+import com.qfs.security.spring.impl.CompositeUserDetailsService;
+import com.qfs.server.cfg.IActivePivotConfig;
+import com.qfs.server.cfg.IJwtConfig;
+import com.qfs.server.cfg.content.IActivePivotContentServiceConfig;
+import com.qfs.server.cfg.impl.JwtRestServiceConfig;
+import com.qfs.server.cfg.impl.VersionServicesConfig;
+import com.qfs.servlet.handlers.impl.NoRedirectLogoutSuccessHandler;
+import com.quartetfs.biz.pivot.security.IAuthorityComparator;
+import com.quartetfs.biz.pivot.security.impl.AuthorityComparatorAdapter;
+import com.quartetfs.biz.pivot.security.impl.UserDetailsServiceWrapper;
+import com.quartetfs.fwk.ordering.impl.CustomComparator;
+import com.quartetfs.fwk.security.IUserDetailsService;
 import java.util.Arrays;
-
+import java.util.Collections;
+import java.util.List;
 import javax.servlet.Filter;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -37,26 +56,9 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.switchuser.SwitchUserFilter;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
-
-import com.activeviam.var.cfg.ActiveUIResourceServerConfig;
-import com.qfs.QfsWebUtils;
-import com.qfs.content.cfg.impl.ContentServerRestServicesConfig;
-import com.qfs.content.service.IContentService;
-import com.qfs.jwt.service.IJwtService;
-import com.qfs.pivot.servlet.impl.ContextValueFilter;
-import com.qfs.security.cfg.ICorsFilterConfig;
-import com.qfs.security.spring.impl.CompositeUserDetailsService;
-import com.qfs.server.cfg.IActivePivotConfig;
-import com.qfs.server.cfg.IJwtConfig;
-import com.qfs.server.cfg.content.IActivePivotContentServiceConfig;
-import com.qfs.server.cfg.impl.JwtRestServiceConfig;
-import com.qfs.server.cfg.impl.VersionServicesConfig;
-import com.qfs.servlet.handlers.impl.NoRedirectLogoutSuccessHandler;
-import com.quartetfs.biz.pivot.security.IAuthorityComparator;
-import com.quartetfs.biz.pivot.security.impl.AuthorityComparatorAdapter;
-import com.quartetfs.biz.pivot.security.impl.UserDetailsServiceWrapper;
-import com.quartetfs.fwk.ordering.impl.CustomComparator;
-import com.quartetfs.fwk.security.IUserDetailsService;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * Generic implementation for security configuration of a server hosting ActivePivot, or Content
@@ -75,20 +77,28 @@ import com.quartetfs.fwk.security.IUserDetailsService;
 @EnableGlobalAuthentication
 @EnableWebSecurity
 @Configuration
-public abstract class SecurityConfig {
+public abstract class SecurityConfig implements ICorsConfig {
 
 	public static final String BASIC_AUTH_BEAN_NAME = "basicAuthenticationEntryPoint";
 
-	/** Admin user */
+	/**
+	 * Admin user
+	 */
 	public static final String ROLE_ADMIN = "ROLE_ADMIN";
-	
-	/** Standard user role */
+
+	/**
+	 * Standard user role
+	 */
 	public static final String ROLE_USER = "ROLE_USER";
 
-	/** Role for technical components */
+	/**
+	 * Role for technical components
+	 */
 	public static final String ROLE_TECH = "ROLE_TECH";
-	
-	/** Content Server Root role */
+
+	/**
+	 * Content Server Root role
+	 */
 	public static final String ROLE_CS_ROOT = IContentService.ROLE_ROOT;
 
 	@Autowired
@@ -100,15 +110,43 @@ public abstract class SecurityConfig {
 	}
 
 	/**
-	 * Returns the default {@link AuthenticationEntryPoint} to use
-	 * for the fallback basic HTTP authentication.
+	 * Returns the default {@link AuthenticationEntryPoint} to use for the fallback basic HTTP
+	 * authentication.
 	 *
-	 * @return The default {@link AuthenticationEntryPoint} for the
-	 *         fallback HTTP basic authentication.
+	 * @return The default {@link AuthenticationEntryPoint} for the fallback HTTP basic
+	 * 		authentication.
 	 */
-	@Bean(name=BASIC_AUTH_BEAN_NAME)
+	@Bean(name = BASIC_AUTH_BEAN_NAME)
 	public AuthenticationEntryPoint basicAuthenticationEntryPoint() {
 		return new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED);
+	}
+
+
+	@Override
+	public List<String> getAllowedOrigins() {
+		return Collections.singletonList(CorsConfiguration.ALL);
+	}
+
+	/**
+	 * [Bean] Spring standard way of configuring CORS.
+	 *
+	 * <p>This simply forwards the configuration of {@link ICorsConfig} to Spring security system.
+	 *
+	 * @return the configuration for the application.
+	 */
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		final CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(getAllowedOrigins());
+		configuration.setAllowedHeaders(getAllowedHeaders());
+		configuration.setExposedHeaders(getExposedHeaders());
+		configuration.setAllowedMethods(getAllowedMethods());
+		configuration.setAllowCredentials(true);
+
+		final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+
+		return source;
 	}
 
 	@Autowired
@@ -143,23 +181,25 @@ public abstract class SecurityConfig {
 	@Bean
 	public UserDetailsService userDetailsService() {
 		InMemoryUserDetailsManagerBuilder b = new InMemoryUserDetailsManagerBuilder()
-				.withUser("admin").password(passwordEncoder().encode("admin")).authorities(ROLE_USER, ROLE_ADMIN, ROLE_CS_ROOT).and()
+				.withUser("admin").password(passwordEncoder().encode("admin"))
+				.authorities(ROLE_USER, ROLE_ADMIN, ROLE_CS_ROOT).and()
 				.withUser("user").password(passwordEncoder().encode("user")).authorities(ROLE_USER).and();
 		return new CompositeUserDetailsService(Arrays.asList(b.build(), technicalUserDetailsService()));
 	}
 
 	/**
-	 * Creates a technical user to allow ActivePivot to connect
-	 * to the content server. (noop password encoder)
+	 * Creates a technical user to allow ActivePivot to connect to the content server. (noop password
+	 * encoder)
 	 *
 	 * @return {@link UserDetailsService user data}
 	 */
 	protected UserDetailsManager technicalUserDetailsService() {
 		return new InMemoryUserDetailsManagerBuilder()
-				.withUser("pivot").password(passwordEncoder().encode("pivot")).authorities(ROLE_TECH, ROLE_CS_ROOT).and()
+				.withUser("pivot").password(passwordEncoder().encode("pivot"))
+				.authorities(ROLE_TECH, ROLE_CS_ROOT).and()
 				.build();
 	}
-	
+
 	/**
 	 * [Bean] Comparator for user roles
 	 * <p>
@@ -169,12 +209,13 @@ public abstract class SecurityConfig {
 	 *   <li>com.quartetfs.biz.pivot.security.impl.ContextValueManager#setAuthorityComparator(IAuthorityComparator)</li>
 	 *   <li>{@link IJwtService}</li>
 	 * </ul>
-	 * @return a comparator that indicates which authority/role prevails over another. <b>NOTICE -
-	 *         an authority coming AFTER another one prevails over this "previous" authority.</b>
-	 *         This authority ordering definition is essential to resolve possible ambiguity when,
-	 *         for a given user, a context value has been defined in more than one authority
-	 *         applicable to that user. In such case, it is what has been set for the "prevailing"
-	 *         authority that will be effectively retained for that context value for that user.
+	 *
+	 * @return a comparator that indicates which authority/role prevails over another. <b>NOTICE - an
+	 * 		authority coming AFTER another one prevails over this "previous" authority.</b> This
+	 * 		authority ordering definition is essential to resolve possible ambiguity when, for a given
+	 * 		user, a context value has been defined in more than one authority applicable to that user. In
+	 * 		such case, it is what has been set for the "prevailing" authority that will be effectively
+	 * 		retained for that context value for that user.
 	 */
 	@Bean
 	public IAuthorityComparator authorityComparator() {
@@ -191,9 +232,13 @@ public abstract class SecurityConfig {
 	 */
 	public static abstract class AWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
-		/** {@code true} to enable the logout URL */
+		/**
+		 * {@code true} to enable the logout URL
+		 */
 		protected final boolean logout;
-		/** The name of the cookie to clear */
+		/**
+		 * The name of the cookie to clear
+		 */
 		protected final String cookieName;
 
 		@Autowired
@@ -221,14 +266,12 @@ public abstract class SecurityConfig {
 
 		@Override
 		protected final void configure(final HttpSecurity http) throws Exception {
-			Filter jwtFilter = context.getBean(IJwtConfig.class).jwtFilter();
-			Filter corsFilter = context.getBean(ICorsFilterConfig.class).corsFilter();
+			final Filter jwtFilter = context.getBean(IJwtConfig.class).jwtFilter();
 
 			http
 					// As of Spring Security 4.0, CSRF protection is enabled by default.
 					.csrf().disable()
-					// Configure CORS
-					.addFilterBefore(corsFilter, SecurityContextPersistenceFilter.class)
+					.cors().and()
 					// To allow authentication with JWT (Required for ActiveUI)
 					.addFilterAfter(jwtFilter, SecurityContextPersistenceFilter.class);
 
@@ -265,7 +308,8 @@ public abstract class SecurityConfig {
 		@Override
 		protected void doConfigure(HttpSecurity http) throws Exception {
 			// Permit all on ActiveUI resources and the root (/) that redirects to ActiveUI index.html.
-			final String pattern = "^(.{0}|\\/|\\/" + ActiveUIResourceServerConfig.NAMESPACE + "(\\/.*)?)$";
+			final String pattern =
+					"^(.{0}|\\/|\\/" + ActiveUIResourceServerConfig.NAMESPACE + "(\\/.*)?)$";
 			http
 					// Only theses URLs must be handled by this HttpSecurity
 					.regexMatcher(pattern)
@@ -281,13 +325,13 @@ public abstract class SecurityConfig {
 		}
 
 	}
-	
+
 	/**
 	 * Configuration for JWT.
 	 * <p>
-	 * The most important point is the {@code authenticationEntryPoint}. It must
-	 * only send an unauthorized status code so that JavaScript clients can
-	 * authenticate (otherwise the browser will intercepts the response).
+	 * The most important point is the {@code authenticationEntryPoint}. It must only send an
+	 * unauthorized status code so that JavaScript clients can authenticate (otherwise the browser
+	 * will intercepts the response).
 	 *
 	 * @author ActiveViam
 	 * @see HttpStatusEntryPoint
@@ -301,7 +345,6 @@ public abstract class SecurityConfig {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			final Filter corsFilter = context.getBean(ICorsFilterConfig.class).corsFilter();
 			final AuthenticationEntryPoint basicAuthenticationEntryPoint = context.getBean(
 					BASIC_AUTH_BEAN_NAME,
 					AuthenticationEntryPoint.class);
@@ -309,8 +352,6 @@ public abstract class SecurityConfig {
 					.antMatcher(JwtRestServiceConfig.REST_API_URL_PREFIX + "/**")
 					// As of Spring Security 4.0, CSRF protection is enabled by default.
 					.csrf().disable()
-					// Configure CORS
-					.addFilterBefore(corsFilter, SecurityContextPersistenceFilter.class)
 					.authorizeRequests()
 					.antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 					.antMatchers("/**").hasAnyAuthority(ROLE_USER)
@@ -321,8 +362,7 @@ public abstract class SecurityConfig {
 	}
 
 	/**
-	 * Special configuration for the Version service
-	 * that everyone must be allowed to access.
+	 * Special configuration for the Version service that everyone must be allowed to access.
 	 *
 	 * @author ActiveViam
 	 * @see HttpStatusEntryPoint
@@ -336,14 +376,10 @@ public abstract class SecurityConfig {
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			Filter corsFilter = context.getBean(ICorsFilterConfig.class).corsFilter();
-
 			http
 					.antMatcher(VersionServicesConfig.REST_API_URL_PREFIX + "/**")
 					// As of Spring Security 4.0, CSRF protection is enabled by default.
 					.csrf().disable()
-					// Configure CORS
-					.addFilterBefore(corsFilter, SecurityContextPersistenceFilter.class)
 					.authorizeRequests()
 					.antMatchers("/**").permitAll();
 		}
@@ -367,28 +403,27 @@ public abstract class SecurityConfig {
 		protected void doConfigure(HttpSecurity http) throws Exception {
 			final String url = ContentServerRestServicesConfig.NAMESPACE;
 			http
-				// Only theses URLs must be handled by this HttpSecurity
-				.antMatcher(url + "/**")
-				.authorizeRequests()
-				// The order of the matchers matters
-				.antMatchers(
-					HttpMethod.OPTIONS,
-					QfsWebUtils.url(ContentServerRestServicesConfig.REST_API_URL_PREFIX + "**"))
-				.permitAll()
-				.antMatchers(url + "/**")
-				.hasAuthority(ROLE_USER)
-				.and()
-				.httpBasic();
+					// Only theses URLs must be handled by this HttpSecurity
+					.antMatcher(url + "/**")
+					.authorizeRequests()
+					// The order of the matchers matters
+					.antMatchers(
+							HttpMethod.OPTIONS,
+							QfsWebUtils.url(ContentServerRestServicesConfig.REST_API_URL_PREFIX + "**"))
+					.permitAll()
+					.antMatchers(url + "/**")
+					.hasAuthority(ROLE_USER)
+					.and()
+					.httpBasic();
 		}
 
 	}
-	
-	
+
+
 	/**
 	 * Configure security for ActivePivot web services
 	 *
 	 * @author ActiveViam
-	 *
 	 */
 	@Configuration
 	public static class ActivePivotSecurityConfigurer extends AWebSecurityConfigurer {

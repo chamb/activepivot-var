@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * <b>RiskCalculator</b>
- *
+ * <p>
  * Computes the different risk attributes, based on attributes from the related trade and product.
  *
  * @author ActiveViam
@@ -21,27 +21,57 @@ public class RiskCalculator {
 	// constants used in calculation formulas
 	private static final double BUMP_SIZE_50 = 0.5;
 	private static final double SHIFT_OPERAND = 1.1;
-	
-	/** Default vector length */
+
+	/**
+	 * Default vector length
+	 */
 	private static final int DEFAULT_VECTOR_LENGTH = 260;
 
 	//factors used for bumpedMtmDown and bumpedMtmUp perturbation
-	private static final double[] FACTORS = { .5, .2, .3, .6 };
+	private static final double[] FACTORS = {.5, .2, .3, .6};
 
-	/** Size of the pnl vectors */
+	/**
+	 * Size of the pnl vectors
+	 */
 	protected final int vectorLength;
-	
-	
+
+
 	public RiskCalculator() {
 		this(DEFAULT_VECTOR_LENGTH);
 	}
-	
+
 	public RiskCalculator(int vectorLength) {
 		this.vectorLength = vectorLength;
 	}
 
 	/**
+	 * round a double
+	 *
+	 * @param what the double to round
+	 * @param howmuch rounding precision
+	 * @return double the rounded double
+	 */
+	public static double round(double what, int howmuch) {
+		return ((int) (what * Math.pow(10, howmuch) + .5)) / Math.pow(10, howmuch);
+	}
+
+	/**
+	 * nextDouble used to generate a random number in a specific interval
+	 *
+	 * @param min lower boundary
+	 * @param max upper boundary
+	 * @param rand the random to use
+	 * @return double
+	 */
+	public static double nextDouble(double min, double max, Random rand) {
+		double deltaRandom =
+				rand.nextDouble() * (max - min);  // should be in [0, 1) * difference = [0, difference)
+		return min + deltaRandom;  // should be in [min, min + difference) = [min, max)
+	}
+
+	/**
 	 * Generate a risk record for the given trade on the given product
+	 *
 	 * @param trade
 	 * @param product
 	 * @return risk entry
@@ -65,8 +95,10 @@ public class RiskCalculator {
 		double baseBumpedMtmUp = product.getBumpedMtmUp();
 		double baseBumpedMtmDown = product.getBumpedMtmDown();
 
-		double bumpedMtmUp = round(baseBumpedMtmUp + baseBumpedMtmUp * FACTORS[random.nextInt(FACTORS.length)], 2);
-		double bumpedMtmDown = round(baseBumpedMtmDown + baseBumpedMtmDown * FACTORS[random.nextInt(FACTORS.length)], 2);
+		double bumpedMtmUp = round(
+				baseBumpedMtmUp + baseBumpedMtmUp * FACTORS[random.nextInt(FACTORS.length)], 2);
+		double bumpedMtmDown = round(
+				baseBumpedMtmDown + baseBumpedMtmDown * FACTORS[random.nextInt(FACTORS.length)], 2);
 
 		//calculating and adding new measures that depend on external MarketData (rateChange in our case)
 
@@ -92,36 +124,12 @@ public class RiskCalculator {
 
 		// generate a pnl vector with a gaussian distribution around the pnl
 		double[] pnlVector = new double[vectorLength];
-		for(int i = 0; i < vectorLength; i++) {
+		for (int i = 0; i < vectorLength; i++) {
 			pnlVector[i] = 0.2 * pnl * random.nextGaussian();
 		}
-		
+
 		Risk riskEntry = new Risk(trade.getId(), delta, gamma, vega, pnl, pnlVector);
 		return riskEntry;
 	}
-	
-	
-	
-	/**
-	 * round a double
-	 * @param what the double to round
-	 * @param howmuch rounding precision
-	 * @return double the rounded double
-	 */
-	public static double round(double what, int howmuch) {
-		return ( (int)(what * Math.pow(10,howmuch) + .5) ) / Math.pow(10,howmuch);
-	}
 
-	/**
-	 * nextDouble used to generate a random number in a specific interval
-	 * @param min lower boundary
-	 * @param max upper boundary
-	 * @param rand the random to use
-	 * @return double
-	 */
-	public static double nextDouble(double min, double max, Random rand) {
-		double deltaRandom = rand.nextDouble() * (max - min);	// should be in [0, 1) * difference = [0, difference)
-		return min + deltaRandom;	// should be in [min, min + difference) = [min, max)
-	}
-	
 }

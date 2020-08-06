@@ -6,19 +6,11 @@
  */
 package com.activeviam.var.cfg.datastore;
 
-import static com.qfs.literal.ILiteralType.*;
+import static com.qfs.literal.ILiteralType.DOUBLE;
 import static com.qfs.literal.ILiteralType.INT;
 import static com.qfs.literal.ILiteralType.LOCAL_DATE;
 import static com.qfs.literal.ILiteralType.LONG;
 import static com.qfs.literal.ILiteralType.STRING;
-
-import java.util.Collection;
-import java.util.LinkedList;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 
 import com.qfs.desc.IDatastoreSchemaDescription;
 import com.qfs.desc.IReferenceDescription;
@@ -26,33 +18,37 @@ import com.qfs.desc.IStoreDescription;
 import com.qfs.desc.impl.DatastoreSchemaDescription;
 import com.qfs.desc.impl.ReferenceDescription;
 import com.qfs.desc.impl.StoreDescriptionBuilder;
-import com.qfs.server.cfg.IDatastoreDescriptionConfig;
+import java.util.Collection;
+import java.util.LinkedList;
+import org.springframework.core.env.Environment;
 
 /**
- * Spring configuration file that exposes the datastore
- * {@link IDatastoreSchemaDescription description}.
+ * Spring configuration file that exposes the datastore {@link IDatastoreSchemaDescription
+ * description}.
  *
  * @author ActiveViam
- *
  */
-@Configuration
-public class DatastoreDescriptionConfig implements IDatastoreDescriptionConfig {
+public class DatastoreDescriptionConfig {
 
 	/******************** Formatters ***************************/
 	public static final String DATE_FORMAT = "localDate[yyyy-MM-dd]";
+	public static final String TRADE_STORE = "Trades";
+	public static final String PRODUCT_STORE = "Products";
+	public static final String RISK_STORE = "Risks";
 
+	protected Environment env;
 
-    @Autowired
-    protected Environment env;
-	
-    public int getPartitionCount() {
-    	return env.getProperty("datastore.partitionCount", Integer.class, 8);
-    }
-    
-	@Bean
+	public DatastoreDescriptionConfig(final Environment env) {
+		this.env = env;
+	}
+
+	public int getPartitionCount() {
+		return env.getProperty("datastore.partitionCount", Integer.class, 8);
+	}
+
 	public IStoreDescription products() {
-		
-		return new StoreDescriptionBuilder().withStoreName("Products")
+
+		return new StoreDescriptionBuilder().withStoreName(PRODUCT_STORE)
 				.withField("Id", INT).asKeyField()
 				.withField("ProductName", STRING)
 				.withField("ProductType", STRING)
@@ -67,11 +63,10 @@ public class DatastoreDescriptionConfig implements IDatastoreDescriptionConfig {
 				.withField("Rho", DOUBLE)
 				.build();
 	}
-	
-	@Bean
+
 	public IStoreDescription trades() {
-		
-		return new StoreDescriptionBuilder().withStoreName("Trades")
+
+		return new StoreDescriptionBuilder().withStoreName(TRADE_STORE)
 				.withField("Id", LONG).asKeyField()
 				.withField("ProductId", INT)
 				.withField("ProductQtyMultiplier", DOUBLE)
@@ -85,10 +80,12 @@ public class DatastoreDescriptionConfig implements IDatastoreDescriptionConfig {
 				.withModuloPartitioning("Id", getPartitionCount())
 				.build();
 	}
-	
-	/** @return the description of the risk store */
+
+	/**
+	 * @return the description of the risk store
+	 */
 	public IStoreDescription risks() {
-		return new StoreDescriptionBuilder().withStoreName("Risks")
+		return new StoreDescriptionBuilder().withStoreName(RISK_STORE)
 				.withField("TradeId", LONG).asKeyField()
 				.withField("Pnl", DOUBLE)
 				.withField("Delta", DOUBLE)
@@ -98,9 +95,8 @@ public class DatastoreDescriptionConfig implements IDatastoreDescriptionConfig {
 				.withModuloPartitioning("TradeId", getPartitionCount())
 				.build();
 	}
-	
-	@Bean
-	public Collection<IReferenceDescription> references(){
+
+	public Collection<IReferenceDescription> references() {
 		final Collection<IReferenceDescription> references = new LinkedList<>();
 		references.add(ReferenceDescription.builder()
 				.fromStore("Trades")
@@ -118,7 +114,6 @@ public class DatastoreDescriptionConfig implements IDatastoreDescriptionConfig {
 	}
 
 	/**
-	 *
 	 * Provide the schema description of the datastore.
 	 * <p>
 	 * It is based on the descriptions of the stores in the datastore, the descriptions of the
@@ -126,8 +121,6 @@ public class DatastoreDescriptionConfig implements IDatastoreDescriptionConfig {
 	 *
 	 * @return schema description
 	 */
-	@Override
-	@Bean
 	public IDatastoreSchemaDescription schemaDescription() {
 		final Collection<IStoreDescription> stores = new LinkedList<>();
 		stores.add(products());

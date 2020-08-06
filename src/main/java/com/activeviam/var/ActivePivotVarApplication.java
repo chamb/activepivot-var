@@ -18,43 +18,46 @@
  */
 package com.activeviam.var;
 
+import com.activeviam.var.cfg.ActivePivotVaRConfig;
+import javax.servlet.MultipartConfigElement;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.DispatcherServlet;
-
-import javax.servlet.MultipartConfigElement;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 /**
- * 
  * Spring Boot application launcher.
- * 
- * @author ActiveViam
  *
+ * @author ActiveViam
  */
-@SpringBootApplication
+@Configuration
+@EnableAutoConfiguration(exclude = {org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration.class})
+@EnableWebMvc
+@Import({ActivePivotVaRConfig.class})
 public class ActivePivotVarApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(ActivePivotVarApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(ActivePivotVarApplication.class, args);
+	}
 
-    /**
-     * Special beans to make AP work in SpringBoot
-     * https://github.com/spring-projects/spring-boot/issues/15373
-     */
-    @Bean
-    public DispatcherServletRegistrationBean dispatcherServletRegistration(
-            DispatcherServlet dispatcherServlet,
-            ObjectProvider<MultipartConfigElement> multipartConfig) {
-        DispatcherServletRegistrationBean registration = new DispatcherServletRegistrationBean(
-                dispatcherServlet, "/*");
-        registration.setName("springDispatcherServlet");
-        registration.setLoadOnStartup(1);
-        multipartConfig.ifAvailable(registration::setMultipartConfig);
-        return registration;
-    }
+	/**
+	 * Special beans to make AP work in SpringBoot https://github.com/spring-projects/spring-boot/issues/15373
+	 */
+	@Bean
+	public DispatcherServletRegistrationBean dispatcherServletRegistration(
+			DispatcherServlet dispatcherServlet,
+			ObjectProvider<MultipartConfigElement> multipartConfig) {
+		DispatcherServletRegistrationBean registration = new DispatcherServletRegistrationBean(
+				dispatcherServlet, "/*");
+		registration.setName("springDispatcherServlet");
+		registration.setLoadOnStartup(1);
+		multipartConfig.ifAvailable(registration::setMultipartConfig);
+		return registration;
+	}
 
 }

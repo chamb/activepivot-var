@@ -6,18 +6,8 @@
  */
 package com.activeviam.var.cfg;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-
-import com.activeviam.copper.Registrations;
-import com.activeviam.var.cfg.datastore.DatastoreDescriptionConfig;
+import com.activeviam.copper.CopperRegistrations;
 import com.activeviam.var.cfg.pivot.ActivePivotManagerConfig;
-import com.activeviam.var.cfg.security.CorsFilterConfig;
 import com.activeviam.var.cfg.security.SecurityConfig;
 import com.qfs.server.cfg.IDatastoreConfig;
 import com.qfs.server.cfg.impl.ActivePivotConfig;
@@ -31,54 +21,65 @@ import com.qfs.service.store.impl.NoSecurityDatastoreServiceConfig;
 import com.quartetfs.fwk.Registry;
 import com.quartetfs.fwk.contributions.impl.ClasspathContributionProvider;
 import com.quartetfs.fwk.monitoring.jmx.impl.JMXEnabler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 /**
- * Spring configuration of the Nano ActivePivot Application services.<br>
- * Some parameters of the Nano Services can be quickly changed by modifying the nano.properties
- * file.
+ * Spring configuration of the Nano ActivePivot Application services.<br> Some parameters of the
+ * Nano Services can be quickly changed by modifying the nano.properties file.
  *
  * @author ActiveViam
- *
  */
-@PropertySource(value = { "classpath:jwt.properties" })
+@PropertySource(value = {"classpath:jwt.properties"})
 @EnableWebMvc
 @Configuration
 @Import(value = {
 		ActivePivotConfig.class,
 		DatastoreConfig.class,
 		NoSecurityDatastoreServiceConfig.class,
-		DatastoreDescriptionConfig.class,
 		FullAccessBranchPermissionsManagerConfig.class,
 		DataLoadingConfig.class,
 		ActivePivotManagerConfig.class,
 		ContentServiceConfig.class,
 		CustomI18nConfig.class,
 		SecurityConfig.class,
-		CorsFilterConfig.class,
 		ActiveUIResourceServerConfig.class,
 
 		ActivePivotServicesConfig.class,
 		ActiveViamRestServicesConfig.class,
 		ActiveViamWebSocketServicesConfig.class,
 		JwtConfig.class
+
+		// Configuration classes
 })
 public class ActivePivotVaRConfig {
 
 	/** Before anything else we statically initialize the ActiveViam Registry. */
 	static {
 		Registry.setContributionProvider(new ClasspathContributionProvider());
-		Registrations.registerCopperPluginValues();
+		CopperRegistrations.registerCopperPluginValues();
 	}
 
-	/** ActivePivot spring configuration */
+	/**
+	 * ActivePivot spring configuration
+	 */
 	@Autowired
 	protected ActivePivotConfig apConfig;
 
-	/** Datastore spring configuration */
+	/**
+	 * Datastore spring configuration
+	 */
 	@Autowired
 	protected IDatastoreConfig datastoreConfig;
 
-	/** ActivePivot Service Config */
+	/**
+	 * ActivePivot Service Config
+	 */
 	@Autowired
 	protected ActivePivotServicesConfig apServiceConfig;
 
@@ -107,7 +108,6 @@ public class ActivePivotVaRConfig {
 
 
 	/**
-	 *
 	 * Initialize and start the ActivePivot Manager
 	 *
 	 * @return void

@@ -6,25 +6,27 @@
  */
 package com.activeviam.var.cfg;
 
-import java.util.Set;
-
 import com.qfs.server.cfg.impl.ASpringResourceServerConfig;
 import com.qfs.util.impl.QfsArrays;
+import java.util.Set;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * Spring configuration for ActiveUI web application
  *
  * @author ActiveViam
- *
  */
 @Configuration
 public class ActiveUIResourceServerConfig extends ASpringResourceServerConfig {
 
-	/** The namespace of the ActiveUI web application */
+	/**
+	 * The namespace of the ActiveUI web application
+	 */
 	public static final String NAMESPACE = "ui";
 
-	/** Constructor */
+	/**
+	 * Constructor
+	 */
 	public ActiveUIResourceServerConfig() {
 		super("/" + NAMESPACE);
 	}
@@ -55,6 +57,7 @@ public class ActiveUIResourceServerConfig extends ASpringResourceServerConfig {
 
 	/**
 	 * Gets the extensions of files to serve.
+	 *
 	 * @return all files extensions
 	 */
 	@Override

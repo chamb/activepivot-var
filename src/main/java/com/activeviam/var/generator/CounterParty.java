@@ -6,7 +6,7 @@
  */
 package com.activeviam.var.generator;
 
-import static com.activeviam.var.generator.VaRDataGenerator.CSV_SEPARATOR;
+import static com.activeviam.var.generator.VaRCsvDataGenerator.CSV_SEPARATOR;
 
 import java.io.Serializable;
 
@@ -19,19 +19,29 @@ public class CounterParty implements Serializable {
 
 	private static final long serialVersionUID = -3123801814847782041L;
 
-	/** Counterparty name */
+	/**
+	 * Counterparty name
+	 */
 	public String counterParty;
 
-	/** Counterparty group */
+	/**
+	 * Counterparty group
+	 */
 	public String counterPartyGroup;
 
-	/** Counterparty city */
+	/**
+	 * Counterparty city
+	 */
 	public String city;
 
-	/** Counterparty sector */
+	/**
+	 * Counterparty sector
+	 */
 	public String sector;
 
-	/** Counterparty rating */
+	/**
+	 * Counterparty rating
+	 */
 	public String rating;
 
 	/**
@@ -43,7 +53,12 @@ public class CounterParty implements Serializable {
 	 * @param city the counterParty city
 	 * @param rating the counterParty rating
 	 */
-	public CounterParty(String counterParty, String counterPartyGroup, String sector, String city, String rating) {
+	public CounterParty(
+			String counterParty,
+			String counterPartyGroup,
+			String sector,
+			String city,
+			String rating) {
 		this.counterParty = counterParty;
 		this.counterPartyGroup = counterPartyGroup;
 		this.sector = sector;
@@ -54,7 +69,8 @@ public class CounterParty implements Serializable {
 	/**
 	 * Default constructor
 	 */
-	public CounterParty() {}
+	public CounterParty() {
+	}
 
 	/**
 	 * @return the counterparty name
@@ -170,38 +186,51 @@ public class CounterParty implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		CounterParty other = (CounterParty) obj;
 		if (city == null) {
-			if (other.city != null)
+			if (other.city != null) {
 				return false;
-		} else if (!city.equals(other.city))
+			}
+		} else if (!city.equals(other.city)) {
 			return false;
+		}
 		if (counterParty == null) {
-			if (other.counterParty != null)
+			if (other.counterParty != null) {
 				return false;
-		} else if (!counterParty.equals(other.counterParty))
+			}
+		} else if (!counterParty.equals(other.counterParty)) {
 			return false;
+		}
 		if (counterPartyGroup == null) {
-			if (other.counterPartyGroup != null)
+			if (other.counterPartyGroup != null) {
 				return false;
-		} else if (!counterPartyGroup.equals(other.counterPartyGroup))
+			}
+		} else if (!counterPartyGroup.equals(other.counterPartyGroup)) {
 			return false;
+		}
 		if (rating == null) {
-			if (other.rating != null)
+			if (other.rating != null) {
 				return false;
-		} else if (!rating.equals(other.rating))
+			}
+		} else if (!rating.equals(other.rating)) {
 			return false;
+		}
 		if (sector == null) {
-			if (other.sector != null)
+			if (other.sector != null) {
 				return false;
-		} else if (!sector.equals(other.sector))
+			}
+		} else if (!sector.equals(other.sector)) {
 			return false;
+		}
 		return true;
 	}
 

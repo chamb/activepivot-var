@@ -6,14 +6,13 @@
  */
 package com.activeviam.var.generator;
 
-import static com.activeviam.var.generator.VaRDataGenerator.*;
+import static com.activeviam.var.generator.VaRCsvDataGenerator.CSV_SEPARATOR;
+import static com.activeviam.var.generator.VaRCsvDataGenerator.CSV_VECTOR_SEPARATOR;
 
 import java.io.PrintWriter;
 
 /**
- * 
  * @author ActiveViam
- *
  */
 public class Risk {
 
@@ -24,8 +23,14 @@ public class Risk {
 	protected final double pnl;
 	protected final double[] pnlVector;
 
-	
-	public Risk(long tradeId, double delta, double gamma, double vega, double pnl, double[] pnlVector) {
+
+	public Risk(
+			long tradeId,
+			double delta,
+			double gamma,
+			double vega,
+			double pnl,
+			double[] pnlVector) {
 		this.tradeId = tradeId;
 		this.delta = delta;
 		this.gamma = gamma;
@@ -34,26 +39,6 @@ public class Risk {
 		this.pnlVector = pnlVector;
 	}
 
-	public long getTradeId() {
-		return tradeId;
-	}
-	public double getDelta() {
-		return delta;
-	}
-	public double getGamma() {
-		return gamma;
-	}
-	public double getVega() {
-		return vega;
-	}
-	public double getPnl() {
-		return pnl;
-	}
-	public double[] getPnlVector() {
-		return pnlVector;
-	}
-	
-	
 	public static void appendCsvHeader(PrintWriter w) {
 		w.append("TradeId");
 		w.append(CSV_SEPARATOR).append("Delta");
@@ -62,7 +47,42 @@ public class Risk {
 		w.append(CSV_SEPARATOR).append("Pnl");
 		w.append(CSV_SEPARATOR).append("PnlVector");
 	}
-	
+
+	private static void printVector(PrintWriter pw, double[] vector) {
+		if (vector != null && vector.length != 0) {
+			for (int i = 0; i < vector.length; i++) {
+				if (i > 0) {
+					pw.append(CSV_VECTOR_SEPARATOR);
+				}
+				pw.print(vector[i]);
+			}
+		}
+	}
+
+	public long getTradeId() {
+		return tradeId;
+	}
+
+	public double getDelta() {
+		return delta;
+	}
+
+	public double getGamma() {
+		return gamma;
+	}
+
+	public double getVega() {
+		return vega;
+	}
+
+	public double getPnl() {
+		return pnl;
+	}
+
+	public double[] getPnlVector() {
+		return pnlVector;
+	}
+
 	/**
 	 * Append a CSV representation of this object into a writer.
 	 */
@@ -75,17 +95,6 @@ public class Risk {
 		pw.append(CSV_SEPARATOR);
 		printVector(pw, getPnlVector());
 	}
-	
-	private static void printVector(PrintWriter pw, double[] vector) {
-		if(vector != null && vector.length != 0) {
-			for(int i = 0; i < vector.length; i++) {
-				if(i > 0) {
-					pw.append(CSV_VECTOR_SEPARATOR);
-				}
-				pw.print(vector[i]);
-			}
-		}
-	}
-	
-	
+
+
 }

@@ -16,40 +16,9 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class CounterPartyGenerator {
 
-	/** The random used to generate counterParties */
-	protected static ThreadLocalRandom random;
-
 	/**
-	 * Constructor
+	 * Static names used to generate counterparties
 	 */
-	public CounterPartyGenerator() {
-		random = ThreadLocalRandom.current();
-	}
-
-	/**
-	 * Generate a new counterParty.
-	 *
-	 * @param counterPartyId id of the counter party
-	 * (between 0 (inclusive) and {@link #getNumberOfCounterParties()} exclusive)
-	 * @return a generated {@link CounterParty counter party}
-	 */
-	public CounterParty generate(int counterPartyId) {
-		CounterParty cp = new CounterParty();
-
-		cp.setCounterParty(counterpartyNames[counterPartyId]);
-		cp.setCounterPartyGroup(counterpartyGroups[counterPartyId]);
-		cp.setCity(locations[random.nextInt(locations.length)]);
-		cp.setRating(ratings[random.nextInt(ratings.length)]);
-		cp.setSector(counterpartyCategory[random.nextInt(counterpartyCategory.length)]);
-
-		return cp;
-	}
-
-	public static int getNumberOfCounterParties() {
-		return counterpartyNames.length;
-	}
-
-	/** Static names used to generate counterparties */
 	protected static final String[] counterpartyNames = {
 			"Unilever ord",
 			"Asahi Chemical Ind.",
@@ -70,9 +39,10 @@ public class CounterPartyGenerator {
 			"Mitsui Mining and Sm.",
 			"Mitsubishi Tokyo Financial Group",
 			"Vale R Doce-PNA (Companhia Vale do Rio Doce SA-CVRD) (ADR)",
-			"Cathay Pacific Airways Ltd." };
-
-	/** Static groups names, aligned with counterparyNames, used to generate group counterparties */
+			"Cathay Pacific Airways Ltd."};
+	/**
+	 * Static groups names, aligned with counterparyNames, used to generate group counterparties
+	 */
 	protected static final String[] counterpartyGroups = {
 			"Unilever",
 			"Asahi",
@@ -95,8 +65,9 @@ public class CounterPartyGenerator {
 			"Vale R Doce",
 			"Cathay"
 	};
-
-	/** CounterParty categories */
+	/**
+	 * CounterParty categories
+	 */
 	protected static final String[] counterpartyCategory = {
 			"Consumer Staples",
 			"Materials",
@@ -105,11 +76,48 @@ public class CounterPartyGenerator {
 			"Information Technology",
 			"Consumer Discretionary",
 	};
+	/**
+	 * Possible ratings for a counterParty
+	 */
+	protected static final String[] ratings = {"AAA", "AA", "A", "BBB", "BB", "B", "CCC", "CC", "C"};
+	/**
+	 * Locations for a counterParty
+	 */
+	protected static final String[] locations = {"Paris", "London", "New York", "Tokyo", "Berlin",
+			"Johannesburg"};
+	/**
+	 * The random used to generate counterParties
+	 */
+	protected static ThreadLocalRandom random;
 
-	/** Possible ratings for a counterParty */
-	protected static final String[] ratings = { "AAA", "AA", "A", "BBB", "BB", "B", "CCC", "CC", "C" };
+	/**
+	 * Constructor
+	 */
+	public CounterPartyGenerator() {
+		random = ThreadLocalRandom.current();
+	}
 
-	/** Locations for a counterParty */
-	protected static final String[] locations = { "Paris", "London", "New York", "Tokyo", "Berlin", "Johannesburg" };
+	public static int getNumberOfCounterParties() {
+		return counterpartyNames.length;
+	}
+
+	/**
+	 * Generate a new counterParty.
+	 *
+	 * @param counterPartyId id of the counter party (between 0 (inclusive) and {@link
+	 *    #getNumberOfCounterParties()} exclusive)
+	 * @return a generated {@link CounterParty counter party}
+	 */
+	public CounterParty generate(int counterPartyId) {
+		CounterParty cp = new CounterParty();
+
+		cp.setCounterParty(counterpartyNames[counterPartyId]);
+		cp.setCounterPartyGroup(counterpartyGroups[counterPartyId]);
+		cp.setCity(locations[random.nextInt(locations.length)]);
+		cp.setRating(ratings[random.nextInt(ratings.length)]);
+		cp.setSector(counterpartyCategory[random.nextInt(counterpartyCategory.length)]);
+
+		return cp;
+	}
 
 }

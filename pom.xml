@@ -1,99 +1,130 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.activeviam</groupId>
-	<artifactId>activepivot-var</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
-	<name>ActivePivot Value at Risk (VaR)</name>
+  <artifactId>activepivot-var</artifactId>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring.boot.version}</version>
+        <executions>
+          <execution>
+            <id>app</id>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+            <configuration>
+              <mainClass>com.activeviam.var.ActivePivotVarApplication</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generator</id>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+            <configuration>
+              <mainClass>com.activeviam.var.generator.VaRDataGenerator</mainClass>
+              <classifier>generator</classifier>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
-	<prerequisites>
-		<maven>3.0</maven>
-	</prerequisites>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.8.1</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.1.0</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-install-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>2.5.2</version>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
 
-	<properties>
-		<activepivot.version>5.8.4-jdk8</activepivot.version>
-		<activeui.version>4.3.2</activeui.version>
-		<spring.boot.version>2.1.9.RELEASE</spring.boot.version>
-	</properties>
+    <!-- Spring Boot Dependencies -->
+    <dependency>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <version>${spring.boot.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <version>${spring.boot.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <scope>test</scope>
+      <version>${spring.boot.version}</version>
+    </dependency>
 
-	<dependencies>
+    <!-- ActivePivot Dependencies -->
+    <dependency>
+      <artifactId>activepivot-server-spring</artifactId>
+      <groupId>com.activeviam.activepivot</groupId>
+      <version>${activepivot.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.activeviam</groupId>
+      <artifactId>parquet-source</artifactId>
+      <version>${activepivot.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.activeviam.source</groupId>
+      <artifactId>cloud-source-azure</artifactId>
+      <version>${activepivot.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>activepivot-test</artifactId>
+      <groupId>com.activeviam.activepivot</groupId>
+      <scope>test</scope>
+      <version>${activepivot.version}</version>
+    </dependency>
 
-		<!-- Spring Boot Dependencies -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-			<version>${spring.boot.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-			<version>${spring.boot.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-			<version>${spring.boot.version}</version>
-            <scope>test</scope>
-        </dependency>
+    <!-- ActiveUI Dependencies -->
+    <dependency>
+      <artifactId>activeui</artifactId>
+      <groupId>com.activeviam.activeui</groupId>
+      <version>${activeui.version}</version>
+    </dependency>
 
-        <!-- ActivePivot Dependencies -->
-        <dependency>
-            <groupId>com.activeviam.activepivot</groupId>
-            <artifactId>activepivot-server-spring</artifactId>
-            <version>${activepivot.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.activeviam.activepivot</groupId>
-            <artifactId>activepivot-test</artifactId>
-            <version>${activepivot.version}</version>
-            <scope>test</scope>
-        </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.10.3</version>
+    </dependency>
+  </dependencies>
 
-		<!-- ActiveUI Dependencies -->
-		<dependency>
-			<groupId>com.activeviam.activeui</groupId>
-			<artifactId>activeui</artifactId>
-			<version>${activeui.version}</version>
-		</dependency>
-    </dependencies>
+  <groupId>com.activeviam</groupId>
+  <modelVersion>4.0.0</modelVersion>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring.boot.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+  <name>ActivePivot Value at Risk (VaR)</name>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>3.1.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.2</version>
-            </plugin>
-        </plugins>
-    </build>
+  <prerequisites>
+    <maven>3.0</maven>
+  </prerequisites>
+
+  <properties>
+    <activepivot.version>5.9.1</activepivot.version>
+    <activeui.version>4.3.8</activeui.version>
+    <spring.boot.version>2.2.6.RELEASE</spring.boot.version>
+  </properties>
+
+  <version>1.0.0-SNAPSHOT</version>
 
 </project>
