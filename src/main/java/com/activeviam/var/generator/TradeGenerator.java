@@ -6,6 +6,9 @@
  */
 package com.activeviam.var.generator;
 
+import com.quartetfs.biz.pivot.cube.hierarchy.IBucketer;
+import com.quartetfs.biz.pivot.cube.hierarchy.axis.impl.DefaultTimeBucketer;
+import com.quartetfs.fwk.QuartetRuntimeException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,50 +18,63 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-import com.quartetfs.biz.pivot.cube.hierarchy.IBucketer;
-import com.quartetfs.biz.pivot.cube.hierarchy.axis.impl.DefaultTimeBucketer;
-import com.quartetfs.fwk.QuartetRuntimeException;
-
 /**
- *
  * This class generates random trades.
  *
  * @author Quartet FS
- *
  */
 public class TradeGenerator {
 
 	//statuses
-	private static final String[] statuses = { "SIMULATION", "MATCHED", "DONE" };
+	private static final String[] statuses = {"SIMULATION", "MATCHED", "DONE"};
 
 	// desks are mapped with underlying types
 	private static final Map<String, String> desks;
+	private static final int NB_BOOK = 10;
+	//misc params
+	private static final int PRODUCTQTY_MAX = 10000;
+	private static final int DATE_DEPTH_MAX = 10 * 365; //max generated days, up to 10 years
+	private static final String[] TRADER_NAMES = {"John", "Will", "Charles", "Henry", "Stan", "Eric",
+			"Sam", "Lucy", "Luke"};
+
 	static {
 		desks = new HashMap<>();
 		desks.put("EquityIndex", "DeskA");
 		desks.put("SingleStock", "DeskB");
 	}
 
-	private static final int NB_BOOK = 10;
-	
-	//misc params
-	private static final int PRODUCTQTY_MAX = 10000;
-	private static final int DATE_DEPTH_MAX = 10 * 365; //max generated days, up to 10 years
-	private static final String[] TRADER_NAMES = { "John", "Will", "Charles", "Henry", "Stan", "Eric", "Sam", "Lucy", "Luke" };
-
 	private final LocalDate nowAsLocalDate = LocalDate.now();
 
-	/** Maps of buckets to bucket dates */
+	/**
+	 * Maps of buckets to bucket dates
+	 */
 	private final NavigableMap<Long, Object> bucketMap;
 
 	public TradeGenerator() {
 		// Create the time bucket map
 		IBucketer<Long> dateBucketer = new DefaultTimeBucketer();
-		this.bucketMap = dateBucketer.createBucketMap(TimeUnit.DAYS.toMillis(nowAsLocalDate.toEpochDay()));
+		this.bucketMap = dateBucketer
+				.createBucketMap(TimeUnit.DAYS.toMillis(nowAsLocalDate.toEpochDay()));
 	}
 
 	/**
+	 * Main function is only used for debugging and testing the random generation.
 	 *
+	 * @param args arguments
+	 */
+	public static void main(String[] args) {
+		int count = 10; //number of generated objects
+		TradeGenerator generator = new TradeGenerator();
+		CounterPartyGenerator counterPartyGenerator = new CounterPartyGenerator();
+
+		for (int i = 0; i < count; i++) {
+			int counterPartyId = i % CounterPartyGenerator.getNumberOfCounterParties();
+			System.out.println(generator
+					.generate(i, new Product(i), counterPartyGenerator.generate(counterPartyId)));
+		}
+	}
+
+	/**
 	 * Randomly generate one trade.
 	 *
 	 * @param tradeId the id of the trade to generate
@@ -111,7 +127,8 @@ public class TradeGenerator {
 		// Bucket the date of the trade
 		Entry<Long, Object> ceilingEntry = getBucketEntry(trade.getDate());
 		if (ceilingEntry == null) {
-			throw new QuartetRuntimeException("There is no bucket large enough to hold: " + trade.getDate());
+			throw new QuartetRuntimeException(
+					"There is no bucket large enough to hold: " + trade.getDate());
 		} else {
 			trade.setDateBucket(ceilingEntry.getValue().toString());
 		}
@@ -147,21 +164,6 @@ public class TradeGenerator {
 	 */
 	protected String getDesk(String underlierType) {
 		return desks.get(underlierType);
-	}
-
-	/**
-	 * Main function is only used for debugging and testing the random generation.
-	 * @param args arguments
-	 */
-	public static void main(String[] args) {
-		int count = 10; //number of generated objects
-		TradeGenerator generator = new TradeGenerator();
-		CounterPartyGenerator counterPartyGenerator = new CounterPartyGenerator();
-
-		for (int i = 0; i < count; i++) {
-			int counterPartyId = i % CounterPartyGenerator.getNumberOfCounterParties();
-			System.out.println(generator.generate(i, new Product(i), counterPartyGenerator.generate(counterPartyId)));
-		}
 	}
 
 }

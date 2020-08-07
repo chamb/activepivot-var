@@ -6,20 +6,13 @@
  */
 package com.activeviam.var.cfg.pivot;
 
-import static com.activeviam.copper.columns.Columns.col;
-import static com.activeviam.copper.columns.Columns.count;
-import static com.activeviam.copper.columns.Columns.sum;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import com.activeviam.builders.StartBuilding;
-import com.activeviam.copper.builders.BuildingContext;
-import com.activeviam.copper.builders.dataset.Datasets.Dataset;
+import com.activeviam.copper.ICopperContext;
+import com.activeviam.copper.api.Copper;
 import com.activeviam.desc.build.ICanBuildCubeDescription;
 import com.activeviam.desc.build.ICubeDescriptionBuilder.INamedCubeDescriptionBuilder;
 import com.activeviam.desc.build.dimensions.ICanStartBuildingDimensions;
+import com.activeviam.var.cfg.datastore.DatastoreDescriptionConfig;
 import com.qfs.desc.IDatastoreSchemaDescription;
 import com.qfs.server.cfg.IActivePivotManagerDescriptionConfig;
 import com.qfs.vector.IVector;
@@ -27,43 +20,30 @@ import com.quartetfs.biz.pivot.cube.hierarchy.ILevelInfo.LevelType;
 import com.quartetfs.biz.pivot.definitions.IActivePivotInstanceDescription;
 import com.quartetfs.biz.pivot.definitions.IActivePivotManagerDescription;
 import com.quartetfs.biz.pivot.definitions.ISelectionDescription;
+import java.util.stream.Stream;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
- * 
  * Configuration of the cube, hierarchies and aggregations.
- * 
- * @author ActiveViam
  *
+ * @author ActiveViam
  */
 @Configuration
 public class ActivePivotManagerConfig implements IActivePivotManagerDescriptionConfig {
-	
+
 	/* ********** */
 	/* Formatters */
 	/* ********** */
 	public static final String DOUBLE_FORMAT = "DOUBLE[##.00]";
 
-
-	/** The datastore schema {@link IDatastoreSchemaDescription description}. */
 	@Autowired
-	protected IDatastoreSchemaDescription datastoreDescription;
+	private Environment env;
 
-	@Override
-	@Bean
-	public IActivePivotManagerDescription managerDescription() {
-		
-		return StartBuilding.managerDescription("NanoPivot")
-				.withCatalog("ActivePivot Catalog")
-				.containingAllCubes()
-				.withSchema("ActivePivot Schema")
-				.withSelection(createNanoPivotSchemaSelectionDescription(this.datastoreDescription))
-				.withCube(createCubeDescription())
-				.build();
-	}
-	
 	/**
 	 * Creates the {@link ISelectionDescription} for NanoPivot Schema.
-	 * 
+	 *
 	 * @param datastoreDescription : The datastore description
 	 * @return The created selection description
 	 */
@@ -74,9 +54,10 @@ public class ActivePivotManagerConfig implements IActivePivotManagerDescriptionC
 				.withAllReachableFields()
 				.build();
 	}
-	
+
 	/**
 	 * Creates the cube description.
+	 *
 	 * @return The created cube description
 	 */
 	public static IActivePivotInstanceDescription createCubeDescription() {
@@ -91,20 +72,14 @@ public class ActivePivotManagerConfig implements IActivePivotManagerDescriptionC
 	 */
 	public static ICanBuildCubeDescription<IActivePivotInstanceDescription> configureCubeBuilder(
 			final INamedCubeDescriptionBuilder builder) {
-		
-		return builder
-				
-				// Define hierarchies of the cube
-				.withDimensions(ActivePivotManagerConfig::dimensions)
-				
-				// Define aggregations and KPIs
-				.withDescriptionPostProcessor(
-						StartBuilding.copperCalculations()
-							.withDefinition(ActivePivotManagerConfig::coPPerCalculations)
-							.build()
-				);
-	}
 
+		return builder
+				.withContributorsCount().withAlias("Trade Count")
+				.withCalculations(ActivePivotManagerConfig::coPPerCalculations)
+
+				// Define hierarchies of the cube
+				.withDimensions(ActivePivotManagerConfig::dimensions);
+	}
 
 	/**
 	 * Adds the dimensions descriptions to the input builder.
@@ -112,69 +87,84 @@ public class ActivePivotManagerConfig implements IActivePivotManagerDescriptionC
 	 * @param builder The cube builder
 	 * @return The builder for chained calls
 	 */
-	public static ICanBuildCubeDescription<IActivePivotInstanceDescription> dimensions (ICanStartBuildingDimensions builder) {
-		
+	public static ICanBuildCubeDescription<IActivePivotInstanceDescription> dimensions(
+			ICanStartBuildingDimensions builder) {
+
 		return builder
-				
-			.withDimension("Products")
+				.withDimension("Products")
 				.withHierarchy("Underlier")
-					.withLevels("UnderlierType", "UnderlierCode")
+				.withLevels("UnderlierType", "UnderlierCode")
 				.withHierarchy("Product").asDefaultHierarchy()
-					.withLevel("ProductType")
-					.withLevel("ProductName")
+				.withLevel("ProductType")
+				.withLevel("ProductName")
 				.withHierarchy("Currency")
-					.withLevel("UnderlierCurrency")
-						.withFirstObjects("EUR", "GBP", "USD", "JPY")
-				
-			.withDimension("Booking")
+				.withLevel("UnderlierCurrency")
+				.withFirstObjects("EUR", "GBP", "USD", "JPY")
+
+				.withDimension("Booking")
 				.withHierarchyOfSameName().asDefaultHierarchy()
-					.withLevels("Desk", "Book")
+				.withLevels("Desk", "Book")
 				.withSingleLevelHierarchy("Traders").withPropertyName("Trader")
 				.withSingleLevelHierarchy("Counterparties").withPropertyName("Counterparty")
-				
-						
-			.withDimension("Date")
+
+				.withDimension("Date")
 				.withHierarchyOfSameName()
-					.withLevel("Date")
-						.withType(LevelType.TIME)
-						.withFormatter("DATE[yyyy-MM-dd]");
+				.withLevel("Date")
+				.withType(LevelType.TIME)
+				.withFormatter("DATE[yyyy-MM-dd]");
+	}
+
+	/**
+	 * The CoPPer calculations to add to the cube
+	 *
+	 * @param context The context with which to build the calculations.
+	 */
+	public static void coPPerCalculations(final ICopperContext context) {
+		ActivePivotManagerConfig.someAggregatedMeasures(context);
 	}
 
 	/* ******************* */
 	/* Measures definition */
 	/* ******************* */
-	
-	/**
-	 * The CoPPer calculations to add to the cube
-	 * @param context The context with which to build the calculations.
-	 */
-	public static void coPPerCalculations(BuildingContext context) {
-		ActivePivotManagerConfig.someAggregatedMeasures(context).publish();
-	}
 
-	
 	/**
 	 * Define some calculations using the COPPER API.
 	 *
 	 * @param context The CoPPer build context.
-	 *
 	 * @return The Dataset of the aggregated measures.
-	 */		
-	protected static Dataset someAggregatedMeasures(final BuildingContext context) {
-		
-		return context.createDatasetFromFacts()
-			.agg(
-				count().as("Trade Count"),
-				sum("Pnl").as("PnL").withFormatter(DOUBLE_FORMAT),
-				sum("Delta").as("Delta").withFormatter(DOUBLE_FORMAT),
-				sum("Vega").as("Vega").withFormatter(DOUBLE_FORMAT),
-				sum("PnlVector").as("PnlVector")
-			)
-			
-			// Value at Risk calculation
-			.withColumn("VaR 95", col("PnlVector").map((IVector v) -> v.quantileDouble(0.95d)).withFormatter(DOUBLE_FORMAT))
-			.withColumn("VaR 99", col("PnlVector").map((IVector v) -> v.quantileDouble(0.99d)).withFormatter(DOUBLE_FORMAT));
+	 */
+	protected static void someAggregatedMeasures(final ICopperContext context) {
+		Stream.of("Pnl", "Delta", "Vega").forEach(field -> {
+			Copper.sum(field)
+					.withFormatter(DOUBLE_FORMAT)
+					.withName(field)
+					.publish(context);
+		});
+		final var vector = Copper.sum("PnlVector").as("PnlVector").publish(context);
 
+		// Value at Risk calculation
+		Stream.of(95, 99).forEach(quantile -> {
+			vector.mapToDouble((IVector v) -> v.quantileDouble(quantile / 100d))
+					.withFormatter(DOUBLE_FORMAT)
+					.withName("VaR " + quantile)
+					.publish(context);
+		});
+	}
+
+	@Override
+	public IDatastoreSchemaDescription userSchemaDescription() {
+		return new DatastoreDescriptionConfig(this.env).schemaDescription();
+	}
+
+	@Override
+	public IActivePivotManagerDescription userManagerDescription() {
+		return StartBuilding.managerDescription("VarManager")
+				.withCatalog("ActivePivot Catalog")
+				.containingAllCubes()
+				.withSchema("ActivePivot Schema")
+				.withSelection(createNanoPivotSchemaSelectionDescription(userSchemaDescription()))
+				.withCube(createCubeDescription())
+				.build();
 	}
 
 

@@ -12,18 +12,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * Repository of counter parties, shared by several services in the Sandbox application.
  *
  * @author Quartet FS
- *
  */
 public class CounterPartyRepository {
 
-	/** Logger **/
+	/**
+	 * Logger
+	 **/
 	protected static final Logger LOGGER = Logger.getLogger(CounterPartyRepository.class.getName());
 
-	/** Cached products */
+	/**
+	 * Cached products
+	 */
 	public List<CounterParty> counterParties;
 
 	/**
@@ -35,9 +37,9 @@ public class CounterPartyRepository {
 
 	/**
 	 * Constructor
-	 * @param counterPartyNumber the number of counter parties to hold.
-	 * (between 1 (inclusive) and {@link CounterPartyGenerator#getNumberOfCounterParties()}
-	 * (inclusive))
+	 *
+	 * @param counterPartyNumber the number of counter parties to hold. (between 1 (inclusive) and
+	 *    {@link CounterPartyGenerator#getNumberOfCounterParties()} (inclusive))
 	 */
 	public CounterPartyRepository(int counterPartyNumber) {
 		LOGGER.log(Level.INFO, "Generating " + counterPartyNumber + " random counter parties.");

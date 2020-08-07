@@ -6,40 +6,40 @@
  */
 package com.activeviam.var.generator;
 
-import static com.activeviam.var.generator.VaRDataGenerator.CSV_SEPARATOR;
+import static com.activeviam.var.generator.VaRCsvDataGenerator.CSV_SEPARATOR;
 
+import com.quartetfs.fwk.IClone;
+import com.quartetfs.fwk.format.impl.DateFormatter;
+import com.quartetfs.fwk.format.impl.LocalDateParser;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.time.LocalDate;
 
-import com.quartetfs.fwk.IClone;
-import com.quartetfs.fwk.format.impl.DateFormatter;
-import com.quartetfs.fwk.format.impl.LocalDateParser;
-
 /**
  * <b>TradeDefinition</b>
- *
+ * <p>
  * This class is used in order to build a simple trade.
- * @author Quartet Financial Systems
  *
+ * @author Quartet Financial Systems
  */
-public class Trade implements IClone<Trade>, Serializable{
-
-	/** serialVersionUID */
-	private static final long serialVersionUID = -3147979015813031848L;
+public class Trade implements IClone<Trade>, Serializable {
 
 	/**
 	 * The pattern used for parsing/formatting dates
 	 */
 	public static final String DATE_PATTERN = LocalDateParser.DEFAULT_PATTERN;
-
 	/**
 	 * The CSV format to parse/format dates.
 	 */
 	public static final DateFormatter TRADE_CSV_DATE_FORMAT = new DateFormatter(DATE_PATTERN);
-
-	/** Unique identifier of the trade */
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID = -3147979015813031848L;
+	/**
+	 * Unique identifier of the trade
+	 */
 	protected long id;
 	protected int book;
 	protected String desk;
@@ -51,14 +51,32 @@ public class Trade implements IClone<Trade>, Serializable{
 	protected int productId;
 	protected int productQtyMultiplier;
 
-	/** The counterparty associated with the trade */
+	/**
+	 * The counterparty associated with the trade
+	 */
 	protected String counterparty;
 
-	/** Default constructor */
-	public Trade() { }
+	/**
+	 * Default constructor
+	 */
+	public Trade() {
+	}
+
+	public static void appendCsvHeader(PrintWriter sb) {
+		sb.append("Id");
+		sb.append(CSV_SEPARATOR).append("ProductId");
+		sb.append(CSV_SEPARATOR).append("ProductQtyMultiplier");
+		sb.append(CSV_SEPARATOR).append("Desk");
+		sb.append(CSV_SEPARATOR).append("Book");
+		sb.append(CSV_SEPARATOR).append("Trader");
+		sb.append(CSV_SEPARATOR).append("Counterparty");
+		sb.append(CSV_SEPARATOR).append("Date");
+		sb.append(CSV_SEPARATOR).append("Status");
+		sb.append(CSV_SEPARATOR).append("IsSimulated");
+	}
 
 	@Override
-	public String toString(){
+	public String toString() {
 		StringBuilder sb = new StringBuilder(getClass().getSimpleName());
 		sb.append(" (id=").append(getId());
 		sb.append(", productId=").append(getProductId());
@@ -73,8 +91,8 @@ public class Trade implements IClone<Trade>, Serializable{
 	}
 
 	/**
-	 * Compute a CSV representation of this object. For simplier loading of the
-	 * CSV files, the fields are aligned with the one in the datastore.
+	 * Compute a CSV representation of this object. For simplier loading of the CSV files, the fields
+	 * are aligned with the one in the datastore.
 	 *
 	 * @return A CSV String representing this object.
 	 */
@@ -84,7 +102,7 @@ public class Trade implements IClone<Trade>, Serializable{
 		appendCsvRow(writer);
 		return sw.toString();
 	}
-	
+
 	/**
 	 * Append a CSV representation of this object into a writer.
 	 */
@@ -100,27 +118,13 @@ public class Trade implements IClone<Trade>, Serializable{
 		sb.append(CSV_SEPARATOR).append(getStatus());
 		sb.append(CSV_SEPARATOR).append(getIsSimulated());
 	}
-	
-	public static void appendCsvHeader(PrintWriter sb) {
-		sb.append("Id");
-		sb.append(CSV_SEPARATOR).append("ProductId");
-		sb.append(CSV_SEPARATOR).append("ProductQtyMultiplier");
-		sb.append(CSV_SEPARATOR).append("Desk");
-		sb.append(CSV_SEPARATOR).append("Book");
-		sb.append(CSV_SEPARATOR).append("Trader");
-		sb.append(CSV_SEPARATOR).append("Counterparty");
-		sb.append(CSV_SEPARATOR).append("Date");
-		sb.append(CSV_SEPARATOR).append("Status");
-		sb.append(CSV_SEPARATOR).append("IsSimulated");
-	}
-
 
 	@Override
-	public Trade clone(){
-		try{
-			Trade clone= (Trade) super.clone();
+	public Trade clone() {
+		try {
+			Trade clone = (Trade) super.clone();
 			return clone;
-		}catch (CloneNotSupportedException e){
+		} catch (CloneNotSupportedException e) {
 			return null;
 		}
 	}
@@ -134,6 +138,7 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the id
+	 *
 	 * @param id The id to set
 	 */
 	public void setId(long id) {
@@ -149,6 +154,7 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the book
+	 *
 	 * @param book The book to set
 	 */
 	public void setBook(int book) {
@@ -164,12 +170,13 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the desk
+	 *
 	 * @param desk The desk to set
 	 */
 	public void setDesk(String desk) {
 		this.desk = desk;
 	}
-	
+
 	/**
 	 * @return The trader
 	 */
@@ -179,6 +186,7 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the trader
+	 *
 	 * @param trader The trader to set
 	 */
 	public void setTrader(String trader) {
@@ -226,6 +234,7 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the status
+	 *
 	 * @param status The status to set
 	 */
 	public void setStatus(String status) {
@@ -241,6 +250,7 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the dateBucket
+	 *
 	 * @param dateBucket The dateBucket to set
 	 */
 	public void setDateBucket(Object dateBucket) {
@@ -256,6 +266,7 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the isSimulated
+	 *
 	 * @param isSimulated The isSimulated to set
 	 */
 	public void setIsSimulated(String isSimulated) {
@@ -271,6 +282,7 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the productId
+	 *
 	 * @param productId The productId to set
 	 */
 	public void setProductId(int productId) {
@@ -286,6 +298,7 @@ public class Trade implements IClone<Trade>, Serializable{
 
 	/**
 	 * Sets the productQtyMultiplier
+	 *
 	 * @param productQtyMultiplier The productQtyMultiplier to set
 	 */
 	public void setProductQtyMultiplier(int productQtyMultiplier) {
@@ -313,6 +326,28 @@ public class Trade implements IClone<Trade>, Serializable{
 			return false;
 		}
 		return true;
+	}
+
+	public static int encodeLocalDate(final LocalDate date) {
+		return date.getDayOfMonth() // 32 values => 5 bits
+				+ (date.getMonthValue() << 5) // 12 values => 4 bits
+				+ (date.getYear() << 9);
+	}
+
+	public static LocalDate decodeLocalDate(final int value) {
+		return LocalDate.of(
+				(value >>> 9),
+				((value >>> 5) & 0b1111),
+				(value & 0b11111));
+	}
+
+	public static void main(final String[] args) {
+		final LocalDate di = LocalDate.of(2020, 12, 31);
+		final int v = encodeLocalDate(di);
+		final LocalDate de = decodeLocalDate(v);
+		if (!de.equals(di)) {
+			throw new AssertionError("Oops");
+		}
 	}
 
 }

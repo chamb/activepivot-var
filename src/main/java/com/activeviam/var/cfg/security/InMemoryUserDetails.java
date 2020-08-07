@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -24,19 +23,21 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * 
- * User details service holding a collection of users in-memory.
- * Passwords are encoded with a password encoder that must be provided.
- * 
- * @author ActiveViam
+ * User details service holding a collection of users in-memory. Passwords are encoded with a
+ * password encoder that must be provided.
  *
+ * @author ActiveViam
  */
 public class InMemoryUserDetails implements UserDetailsService {
 
-	/** Password encoder */
+	/**
+	 * Password encoder
+	 */
 	private final PasswordEncoder encoder;
-	
-	/** Users */
+
+	/**
+	 * Users
+	 */
 	private final List<ActivePivotUser> users;
 
 	public InMemoryUserDetails(PasswordEncoder encoder) {
@@ -44,62 +45,72 @@ public class InMemoryUserDetails implements UserDetailsService {
 		this.users = new ArrayList<>();
 		loadUsers();
 	}
-	
+
 	protected void loadUsers() {
 		// Hardcoded list of users, for testing only
-		this.users.add(new ActivePivotUser("admin", encoder.encode("admin"), ROLE_USER, ROLE_ADMIN, ROLE_CS_ROOT));
+		this.users.add(new ActivePivotUser("admin",
+				encoder.encode("admin"),
+				ROLE_USER,
+				ROLE_ADMIN,
+				ROLE_CS_ROOT));
 		this.users.add(new ActivePivotUser("user", encoder.encode("user"), ROLE_USER));
 	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-		for(ActivePivotUser user: users) {
-			if(user.getUsername().equals(username)) {
+		for (ActivePivotUser user : users) {
+			if (user.getUsername().equals(username)) {
 
 				List<GrantedAuthority> grantedAuthorities =
 						user.getRoles().stream()
-							.map(role -> new SimpleGrantedAuthority(role))
-							.collect(Collectors.toList());
-				
+								.map(role -> new SimpleGrantedAuthority(role))
+								.collect(Collectors.toList());
+
 				// return a spring security user
 				return new User(user.getUsername(), user.getPassword(), grantedAuthorities);
 			}
 		}
-		
+
 		// If user not found. Throw this exception.
 		throw new UsernameNotFoundException("Username: " + username + " not found");
 	}
-	
+
 	/**
-	 * 
 	 * In-Memory representation of a user.
-	 * 
-	 * @author ActiveViam
 	 *
+	 * @author ActiveViam
 	 */
 	private static class ActivePivotUser {
-		
-	    private String username, password;
-	    
-	    /** Comma separated list of roles */
-	    private List<String> roles;
-	    
+
+		private String username, password;
+
+		/**
+		 * Comma separated list of roles
+		 */
+		private List<String> roles;
+
 		public ActivePivotUser(String username, String password, List<String> roles) {
-	    		this.username = username;
-	    		this.password = password;
-	    		this.roles = roles;
-	    }
-		
-		public ActivePivotUser(String username, String password, String ... roles) {
-    		this(username, password, Arrays.asList(roles));
-    }
+			this.username = username;
+			this.password = password;
+			this.roles = roles;
+		}
 
-		public String getUsername() { return username; }
+		public ActivePivotUser(String username, String password, String... roles) {
+			this(username, password, Arrays.asList(roles));
+		}
 
-		public String getPassword() { return password; }
+		public String getUsername() {
+			return username;
+		}
 
-		public List<String> getRoles() { return roles; }
+		public String getPassword() {
+			return password;
+		}
+
+		public List<String> getRoles() {
+			return roles;
+		}
 
 	}
 

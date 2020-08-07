@@ -1,0 +1,45 @@
+##########################
+# Application Properties #
+##########################
+# Spring Boot application port
+server:
+  port: 9090
+
+logging:
+  level:
+    com:
+      activeviam:
+        cloud:
+          fetch:
+            impl:
+              AConcurrentlyFetchingChannel: DEBUG
+
+# Open actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+# Data generator properties
+tradeSource:
+  tradeCount: 1000
+  productCount: 100
+  vectorLength: 260
+
+# Datastore parameters
+datastore:
+  partitionCount: 8
+
+csvSource:
+  # loading mode : generate, csv, parquet
+  mode: parquet-local
+  # Number of parser threads in the CSV source
+  parserThreads: 4
+  data-dir: data
+
+cloud-source:
+  date-folder: 2020-05-15
+  parallel-files: 4
+  parallel-parts: 8
+  connection-string: not-set

@@ -14,22 +14,25 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * Repository of products, shared by several services in the Sandbox application.
  *
  * @author Quartet FS
- *
  */
 public class ProductRepository {
 
-	/** Logger **/
+	/**
+	 * Logger
+	 **/
 	protected static final Logger LOGGER = Logger.getLogger(ProductRepository.class.getName());
 
-	/** Cached products */
+	/**
+	 * Cached products
+	 */
 	public List<Product> products;
 
 	/**
 	 * Constructor
+	 *
 	 * @param productCount the number of products to hold
 	 */
 	public ProductRepository(int productCount) {
@@ -38,6 +41,7 @@ public class ProductRepository {
 
 	/**
 	 * Constructor
+	 *
 	 * @param productCount the number of products to hold
 	 * @param random the random to use when generating products
 	 */
@@ -49,9 +53,9 @@ public class ProductRepository {
 		LOGGER.log(Level.INFO, "Generating " + productCount + " random products.");
 		ProductGenerator productGenerator = new ProductGenerator();
 		synchronized (this) {
-			if(this.products == null) {
+			if (this.products == null) {
 				List<Product> products = new ArrayList<>(productCount);
-				for(int p = 0; p < productCount; p++) {
+				for (int p = 0; p < productCount; p++) {
 					products.add(productGenerator.generate(p, random));
 				}
 				this.products = products;
@@ -59,8 +63,12 @@ public class ProductRepository {
 		}
 	}
 
-	public int getProductCount() { return this.products.size(); }
+	public int getProductCount() {
+		return this.products.size();
+	}
 
-	public Product getProduct(int productId) { return this.products.get(productId); }
+	public Product getProduct(int productId) {
+		return this.products.get(productId);
+	}
 
 }
